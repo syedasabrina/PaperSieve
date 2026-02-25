@@ -1,0 +1,9 @@
+pypdf
+google-generativeai
+pydantic
+pandas
+typer
+pytest
+mypy
+ruff
+python-dotenv
