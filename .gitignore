@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+data/papers/
+data/to_read/
+data/maybe/
+data/filtered_out/
+results/
+*.pdf
+
