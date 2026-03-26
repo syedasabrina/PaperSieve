@@ -1,0 +1,24 @@
+You previously reviewed a paper and gave a low-confidence answer for the following criterion:
+
+CRITERION: {{CRITERION_ID}}
+QUESTION: {{CRITERION_QUESTION}}
+YOUR PREVIOUS ANSWER: {{PREVIOUS_LABEL}}
+YOUR PREVIOUS JUSTIFICATION: {{PREVIOUS_JUSTIFICATION}}
+
+Here is the specific section of the paper to re-examine:
+
+{{SECTION_TEXT}}
+
+---
+
+Look carefully at the section above. Answer only for this one criterion.
+
+Respond with a single valid JSON object and nothing else — no markdown, no explanation outside the JSON.
+
+{
+  "label": "yes" or "no",
+  "confidence": "high", "medium", or "low",
+  "quote": "exact sentence or two from the text, or null if none found",
+  "section": "the section name where the quote appears, or null",
+  "justification": "one sentence explaining your label"
+}

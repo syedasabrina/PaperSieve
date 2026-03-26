@@ -1,0 +1,6 @@
+{
+  "q1": "Does the paper explicitly call an NLP task subjective or objective?",
+  "q2": "Does it define or frame what subjectivity means in any way?",
+  "q3": "Does it discuss annotation disagreement or inter-annotator agreement as a core methodological concern?",
+  "q4": "Does it discuss how to handle subjectivity — any strategy, framework, or approach?"
+}
