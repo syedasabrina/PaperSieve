@@ -57,10 +57,11 @@ Four broad yes/no questions applied to every paper:
 1. Does the paper explicitly call an NLP task subjective or objective?
 2. Does it define or frame what subjectivity means in any way?
 3. Does it discuss annotation disagreement or inter-annotator agreement?
-4. Does it discuss how to handle subjectivity 
+4. Does it discuss how to handle subjectivity?
 
 These are discovery criteria only. They do not constitute 
 the final theoretical framework.
+
 
 ## Scoring and Routing Rules
 - Score = number of "yes" answers (0–4)

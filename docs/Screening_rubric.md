@@ -31,6 +31,10 @@
 
 ### Q1: Does the paper explicitly call an NLP task subjective or objective?
 
+**Focus:** Linking a specific task name to a subjectivity label. The word
+"subjective," "objectivity," or a direct equivalent must appear in connection
+with the task.
+
 **Example:**
 > In practice, this tendency becomes especially evident in subjective annotation
 > tasks, where low inter-annotator agreement...
@@ -52,6 +56,10 @@
 ---
 
 ### Q2: Does it define or frame what subjectivity means in any way?
+
+**Focus:** The "What" and "Why" of subjectivity — definitions, contrasts, or
+characterizations. The label used may be synonymous with subjective (e.g.,
+perspective-dependent, opinion-based).
 
 **Example:**
 > By "complex subjective", we refer to problems where multiple (subjective)
@@ -76,32 +84,39 @@
 
 ### Q3: Does it discuss annotation disagreement or inter-annotator agreement?
 
+**Focus:** Technical or procedural intervention. The authors are not just
+measuring agreement — they are doing something with it as a core part of
+methodology or experiments.
+
 **Example:**
 > To evaluate annotation quality, we measured inter-annotator agreement using
 > Cohen's kappa coefficient (Cohen, 1960). The resulting kappa score was 0.92,
 > indicating almost perfect agreement and demonstrating the reliability of the
 > annotated dataset.
 
-- **Yes if:** At least one of the following is true:
-  - Reliability metrics are reported (Cohen's kappa, Krippendorff's alpha,
-    Fleiss' kappa, etc.),
-  - Annotation disagreement, label variance, or label conflict is discussed,
-  - Adjudication or reconciliation is described as a methodological concern.
-- **No if:** No annotation, agreement, or disagreement signal anywhere in the
-  paper, OR the paper only says annotation happened without any disagreement or
-  reliability analysis.
-- **Low confidence if:** One-line mention with little substance.
-- **Medium confidence if:** Disagreement is clearly mentioned but without deep
-  detail or metrics.
-- **High confidence if:** Metric and value are reported, OR there is substantial
-  conceptual treatment of disagreement's role.
-- **Evidence quote must show:** The metric and its value, OR a clear conceptual
-  discussion of disagreement's role — not just the word "annotator" appearing
-  once.
+- **Yes if:** The paper introduces, develops, or applies a specific method,
+  model, or pipeline designed to manage, reconcile, or utilize annotator
+  disagreement as a core part of its methodology or experiments.
+- **No if:** Annotator agreement or disagreement is never mentioned, OR it is
+  only mentioned in the introduction or literature review as a general problem
+  without the authors proposing a specific fix.
+- **Low confidence if:** The paper mentions using a common method (e.g., "we
+  used MACE to handle labels") but provides no detail, discussion, or analysis
+  of that process.
+- **Medium confidence if:** Disagreement is clearly mentioned and engaged with,
+  but the methodological response lacks detail.
+- **High confidence if:** The authors describe a novel or adapted system or
+  heuristic and report results based on it.
+- **Evidence quote must show:** The technical description of the method or the
+  procedural step taken to address the agreement or disagreement issue.
 
 ---
 
 ### Q4: Does it discuss how to handle subjectivity?
+
+**Focus:** Strategic or conceptual "how-to." Covers both building systems and
+high-level arguments. This includes position papers and theoretical
+recommendations.
 
 **Example:**
 > We argue that humans are a valuable source of information in SDA and play a
@@ -110,18 +125,21 @@
 > interpretive level, offering diverse interpretations shaped by their
 > positionalities.
 
-- **Yes if:** The paper describes any explicit methodological action taken
-  because subjectivity or perspective disagreement is expected or observed. The
-  action can be established, hybrid, or entirely novel.
-- **No if:** The paper only acknowledges that subjectivity exists but does not
-  describe a concrete response in data, modeling, training, inference, or
-  evaluation.
-- **Low confidence if:** A handling approach is implied but not clearly
-  described, or no evidence quote links the approach to subjectivity.
-- **High confidence if:** The paper clearly states what was changed
-  methodologically and why that change addresses subjectivity or disagreement.
-- **Evidence quote must show:** A direct link between (a) a subjectivity-related
-  challenge and (b) a concrete methodological response.
+- **Yes if:** The paper describes any strategy, framework, or philosophical
+  approach for dealing with subjectivity. This can be a technical system
+  (methodology) OR a theoretical recommendation (position paper).
+- **No if:** Subjectivity is acknowledged as a problem but the authors offer no
+  strategy, way forward, or concrete response.
+- **Low confidence if:** A strategy is mentioned in a single sentence without
+  explaining how it would be implemented or why it works.
+- **Medium confidence if:** A handling method is stated but rationale is weak
+  or underdeveloped.
+- **High confidence if:** The authors develop and test a system specifically for
+  subjectivity, OR make a well-reasoned theoretical argument for a handling
+  approach.
+- **Evidence quote must show:** The actual strategy or handling mechanism, OR
+  the explicit theoretical recommendation — not just acknowledgment that
+  subjectivity exists.
 - **Optional examples (non-exhaustive):** aggregation or adjudication, soft or
   distributional labels, disagreement-aware modeling, annotator-perspective
   modeling, evaluation redesign, uncertainty-aware decoding, calibration,
@@ -131,25 +149,25 @@
 
 ## Output Fields Per Paper
 
-| Field                 | Type                          |
-|-----------------------|-------------------------------|
-| q1_label              | yes / no                      |
-| q1_quote              | string                        |
-| q1_section            | string                        |
-| q1_confidence         | high / medium / low           |
-| q2_label              | yes / no                      |
-| q2_quote              | string                        |
-| q2_section            | string                        |
-| q2_confidence         | high / medium / low           |
-| q3_label              | yes / no                      |
-| q3_quote              | string                        |
-| q3_section            | string                        |
-| q3_confidence         | high / medium / low           |
-| q4_label              | yes / no                      |
-| q4_quote              | string                        |
-| q4_section            | string                        |
-| q4_confidence         | high / medium / low           |
-| score                 | 0–4                           |
-| manual_review         | bool                          |
-| manual_review_reason  | string                        |
-| bucket                | to_read / maybe / filtered_out|
+| Field                 | Type                           |
+|-----------------------|--------------------------------|
+| q1_label              | yes / no                       |
+| q1_quote              | string                         |
+| q1_section            | string                         |
+| q1_confidence         | high / medium / low            |
+| q2_label              | yes / no                       |
+| q2_quote              | string                         |
+| q2_section            | string                         |
+| q2_confidence         | high / medium / low            |
+| q3_label              | yes / no                       |
+| q3_quote              | string                         |
+| q3_section            | string                         |
+| q3_confidence         | high / medium / low            |
+| q4_label              | yes / no                       |
+| q4_quote              | string                         |
+| q4_section            | string                         |
+| q4_confidence         | high / medium / low            |
+| score                 | 0–4                            |
+| manual_review         | bool                           |
+| manual_review_reason  | string                         |
+| bucket                | to_read / maybe / filtered_out |
