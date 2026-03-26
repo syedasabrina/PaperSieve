@@ -68,6 +68,7 @@ class PaperRecord(BaseModel):
         )
         if low_confidence and not self.manual_review:
             raise ValueError("manual review must be True if any of the criterion has low confidence")
+        return self
 
 
 
