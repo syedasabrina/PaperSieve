@@ -1,3 +1,14 @@
+# ---------------------------------------------------------------------------
+# Tests — PaperRecord and CriterionResult Pydantic Models
+# ---------------------------------------------------------------------------
+# Validates that:
+#   1. A valid PaperRecord initializes correctly.
+#   2. A mismatched score raises a ValueError.
+#   3. A low confidence criterion without manual_review=True raises a ValueError.
+#   4. A missing required field raises a ValueError.
+# ---------------------------------------------------------------------------
+
+
 import pytest 
 from src.models import (
     CriterionLabel, ConfidenceLevel, FinalBucket, PaperSections, CriterionResult, PaperRecord
