@@ -40,7 +40,8 @@ for manual review.
 - `results/passages.csv` — extracted subjectivity-related sentences
 - `results/logs/<paper_id>.json` — per-paper model evidence logs
 - `data/to_read/` — PDFs scoring 3-4 (high relevance)
-- `data/maybe/` — PDFs scoring 1-2 (medium relevance)
+- `data/maybe_recheck/` — PDFs scoring 3-4 with low confidence evidence
+- `data/maybe_borderline/` — PDFs scoring 1-2 or uncertain noes
 - `data/filtered_out/` — PDFs scoring 0 (not relevant)
 
 ## Explicit Non-Goals
@@ -65,10 +66,12 @@ the final theoretical framework.
 
 ## Scoring and Routing Rules
 - Score = number of "yes" answers (0–4)
-- Score 3–4 → `data/to_read/`
-- Score 1–2 → `data/maybe/`
-- Score 0 → `data/filtered_out/`
-- If confidence = low OR ambiguity = true → `manual_review` flag added
+- Score 3–4, all confidence medium or high → `data/to_read/`
+- Score 3–4, any confidence low → `data/maybe_recheck/`
+- Score 1–2, any confidence → `data/maybe_borderline/`
+- Score 0, any confidence low → `data/maybe_borderline/`
+- Score 0, all confidence medium or high → `data/filtered_out/`
+- If confidence = low → `manual_review` flag added
 
 ## Inclusion and Exclusion Rules
 
@@ -85,9 +88,9 @@ the final theoretical framework.
 - Paper only cites subjectivity in passing without elaboration
 
 **Manual review routing:**
-If `manual_review=true` (triggered by low confidence OR ambiguity flag),
-paper is temporarily routed to `maybe/` regardless of score 
-until manually checked.
+If `manual_review=true` (triggered by low confidence), paper is routed 
+to `maybe_recheck` or `maybe_borderline` depending on score, until manually checked.
+
 
 ## What This Project Is NOT Claiming
 - That the pipeline is exhaustive or perfectly accurate

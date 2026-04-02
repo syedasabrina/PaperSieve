@@ -23,6 +23,7 @@ from pathlib import Path
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from google import genai
+from google.genai import types
 from src.models import PaperSections, CriterionLabel, ConfidenceLevel, CriterionResult, PaperRecord, FinalBucket
 from src.extractor import extract_sections
 
@@ -31,7 +32,9 @@ load_dotenv()
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
 MODEL_NAME = "gemini-2.5-flash"
+RETRY_MODEL_NAME = "gemini-2.5-pro"
 PROMPT_VERSION = "v1"
+MAX_RETRIES_PER_CRITERION = 1
 
 
 def build_prompt(sections: dict[PaperSections, str]) -> str :
@@ -46,9 +49,11 @@ def build_prompt(sections: dict[PaperSections, str]) -> str :
     return template.replace("{{PAPER_SECTIONS}}", section_text)
 
 
-def call_gemini(prompt: str) -> str:
+def call_gemini(prompt: str, model: str = MODEL_NAME) -> str:
     response = client.models.generate_content(
-        model=MODEL_NAME, contents=prompt,
+        model=model, 
+        contents=prompt,
+        config=types.GenerateContentConfig(temperature=0.0),
     )
     return response.text
 
@@ -64,17 +69,26 @@ def parse_response(response_text: str) -> dict[str, CriterionResult]:
     except json.JSONDecodeError as e:
         raise ValueError(f"Gemini returned non json output: {e}\n---\n{clean}")
 
+    valid_sections = {s.value for s in PaperSections}
+
     results = {}
     for key in ["q1", "q2", "q3", "q4"]:
         q = data[key]
+
+        raw_confidence = q["confidence"].lower()
+        if raw_confidence not in ("high", "medium", "low"):
+            raw_confidence = "low"
+
+        raw_section = q.get("section", "").lower() if q.get("section") else None
+
         results[key] = CriterionResult(
-            label = CriterionLabel(q["label"]),
-            confidence = ConfidenceLevel(q["confidence"]),
-            quote = q.get("quote"),
-            section = q.get("section"),
-            justification = q.get("justification"),
+            label=CriterionLabel(q["label"].lower()),
+            confidence=ConfidenceLevel(raw_confidence),
+            quote=q.get("quote"),
+            section=PaperSections(raw_section) if raw_section in valid_sections else None,
+            justification=q.get("justification"),
         )
-    
+
     return results
 
 
@@ -96,9 +110,6 @@ def build_retry_prompt(criterion_id: str, previous_result: CriterionResult, sect
 
 
 def run_retry(criterion_id: str, previous_result: CriterionResult, sections: dict[PaperSections, str]) -> CriterionResult:
-    # Pick the best section to re-examine.
-    # Use the section Gemini cited in the first pass if available,
-    # otherwise fall back to abstract, then full_text_fallback.
     section_key = None
     if previous_result.section:
         try:
@@ -113,10 +124,8 @@ def run_retry(criterion_id: str, previous_result: CriterionResult, sections: dic
     section_text = sections[section_key]
 
     prompt = build_retry_prompt(criterion_id, previous_result, section_text)
-    raw = call_gemini(prompt)
+    raw = call_gemini(prompt, model=RETRY_MODEL_NAME)
 
-    # parse_response expects a full q1–q4 dict, but retry returns one criterion.
-    # So we parse the single-criterion JSON directly here.
     clean = raw.strip()
     if clean.startswith("```"):
         clean = clean.split("\n", 1)[1]
@@ -127,11 +136,19 @@ def run_retry(criterion_id: str, previous_result: CriterionResult, sections: dic
     except json.JSONDecodeError as e:
         raise ValueError(f"Retry parse failed for {criterion_id}: {e}\n---\n{clean}")
 
+    valid_sections = {s.value for s in PaperSections}
+
+    raw_confidence = q["confidence"].lower()
+    if raw_confidence not in ("high", "medium", "low"):
+        raw_confidence = "low"
+
+    raw_section = q.get("section", "").lower() if q.get("section") else None
+
     return CriterionResult(
-        label=CriterionLabel(q["label"]),
-        confidence=ConfidenceLevel(q["confidence"]),
+        label=CriterionLabel(q["label"].lower()),
+        confidence=ConfidenceLevel(raw_confidence),
         quote=q.get("quote"),
-        section=q.get("section"),
+        section=PaperSections(raw_section) if raw_section in valid_sections else None,
         justification=q.get("justification"),
     )
 
@@ -146,7 +163,7 @@ def analyze_paper(pdf_path: Path, paper_id: str) -> PaperRecord:
     retry_used = False
     retry_count = 0
     for criterion_id, result in results.items():
-        if result.confidence == ConfidenceLevel.LOW:
+        if result.confidence == ConfidenceLevel.LOW and retry_count < MAX_RETRIES_PER_CRITERION:
             results[criterion_id] = run_retry(criterion_id, result, sections)
             retry_used = True
             retry_count += 1
@@ -156,12 +173,14 @@ def analyze_paper(pdf_path: Path, paper_id: str) -> PaperRecord:
 
     any_low = any(r.confidence == ConfidenceLevel.LOW for r in results.values())
 
-    if any_low or score <= 2 and score >= 1:
-        bucket = FinalBucket.MAYBE
-    elif score >= 3:
+    if score >= 3 and not any_low:
         bucket = FinalBucket.TO_READ
-    else:
+    elif score >= 3 and any_low:
+        bucket = FinalBucket.MAYBE_RECHECK
+    elif score == 0 and not any_low:
         bucket = FinalBucket.FILTERED_OUT
+    else:
+        bucket = FinalBucket.MAYBE_BORDERLINE
 
     # manual_review flag
     manual_review = any_low

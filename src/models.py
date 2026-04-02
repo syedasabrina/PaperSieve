@@ -6,7 +6,8 @@
 # Enums:
 #   - CriterionLabel    : yes / no answer for each screening question
 #   - ConfidenceLevel   : high / medium / low model confidence
-#   - FinalBucket       : routing destination (to_read, maybe, filtered_out)
+#   - FinalBucket       : routing destination (to_read, maybe_recheck, maybe_borderline,
+#                         filtered_out)
 #   - PaperSections     : sections extracted from PDF by extractor.py
 #
 # Models:
@@ -40,7 +41,8 @@ class ConfidenceLevel(str, Enum):
 
 class FinalBucket(str, Enum):
     TO_READ = 'to_read'
-    MAYBE = 'maybe'
+    MAYBE_RECHECK = 'maybe_recheck'
+    MAYBE_BORDERLINE = 'maybe_borderline'
     FILTERED_OUT = 'filtered_out'
 
 

@@ -6,6 +6,11 @@
 - If no quote is found for a claimed yes, set provisional no + manual_review=true.
 - If quote and label conflict, keep label + set manual_review=true + add brief note.
 - Score = number of yes answers (0–4). manual_review overrides automatic trust.
+- Score 3–4, all confidence medium or high → to_read
+- Score 3–4, any confidence low → maybe_recheck
+- Score 1–2, any confidence → maybe_borderline
+- Score 0, any confidence low → maybe_borderline
+- Score 0, all confidence medium or high → filtered_out
 
 ---
 
@@ -18,12 +23,10 @@
 ---
 
 ## Borderline Handling Rules
-- If only appendix or table contains evidence → allow label, but default to low
-  confidence unless unambiguous.
-- If multiple criteria are low-confidence → keep score but enforce
-  manual_review=true.
-- If paper has high score but all evidence is weak → route to maybe pending
-  manual review.
+- If only appendix or table contains evidence → allow label, but default to low confidence unless unambiguous.
+- If multiple criteria are low-confidence → keep score but enforce manual_review=true.
+- If paper has high score but any evidence is weak → route to maybe_recheck.
+- If paper has low score or any uncertain noes → route to maybe_borderline.
 
 ---
 
@@ -147,6 +150,24 @@ recommendations.
 
 ---
 
+## Scoring and Routing
+
+| Score | Confidence | Bucket |
+|---|---|---|
+| 3–4 | All medium or high | to_read |
+| 3–4 | Any low | maybe_recheck |
+| 1–2 | Any | maybe_borderline |
+| 0 | Any low | maybe_borderline |
+| 0 | All medium or high | filtered_out |
+
+### Bucket Definitions
+- **to_read** — strong signal, proceed to manual reading
+- **maybe_recheck** — high score but weak evidence on at least one criterion, re-examine before reading
+- **maybe_borderline** — low score or uncertain noes, not enough signal to include or exclude
+- **filtered_out** — no signal found with confidence, safe to exclude
+
+---
+
 ## Output Fields Per Paper
 
 | Field                 | Type                           |
@@ -170,4 +191,4 @@ recommendations.
 | score                 | 0–4                            |
 | manual_review         | bool                           |
 | manual_review_reason  | string                         |
-| bucket                | to_read / maybe / filtered_out |
+| bucket                | to_read / maybe_recheck / maybe_borderline / filtered_out |

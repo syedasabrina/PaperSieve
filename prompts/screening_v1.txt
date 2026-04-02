@@ -13,6 +13,8 @@ GLOBAL RULES
 - Quote length: 1–2 sentences (max 3).
 - Preferred quote sources: abstract, introduction, conclusion.
 - Allowed fallback: methods, results, appendix if explicit signal exists there.
+- Do not infer subjectivity. Do not Hallucinate. Only label yes if the paper's own authors explicitly use the term "subjective", "subjectivity", or a direct stated synonym. Your job is to detect what the authors claim, not to interpret whether their content implies subjectivity.
+- Only consider claims made directly by the authors of the paper being screened in their own voice. Any sentence that names another paper, cites authors in parentheses (e.g. Smith et al., 2023), or describes what another system or model found, must be treated as background literature and ignored as evidence for any yes answer.
 
 ---
 
@@ -49,7 +51,7 @@ Q3: Does it discuss annotation disagreement or inter-annotator agreement?
 Focus: Technical or procedural intervention. The authors are not just measuring agreement — they are doing something with it as a core part of methodology or experiments.
 
 Yes if: The paper introduces, develops, or applies a specific method, model, or pipeline designed to manage, reconcile, or utilize annotator disagreement as a core part of its methodology or experiments.
-No if: Annotator agreement or disagreement is never mentioned, OR it is only mentioned in passing as a general problem without the authors proposing a specific methodological response.
+No if: Annotator agreement or disagreement is never mentioned, OR it is only mentioned in passing as a general problem without the authors proposing a specific methodological response. A general annotation protocol designed to ensure quality or consistency does NOT qualify — only methods that explicitly address, measure, or model disagreement count.
 Low confidence if: A common method is mentioned (e.g., "we used MACE to handle labels") but no detail, discussion, or analysis is provided.
 Medium confidence if: Disagreement is clearly mentioned and engaged with, but the methodological response lacks detail.
 High confidence if: A novel or adapted system or heuristic is described with results reported.
@@ -78,10 +80,10 @@ Respond ONLY with a valid JSON object. No preamble, no markdown code blocks, no 
 Use exactly this structure:
 
 {
-  "q1": {"label": "yes or no", "confidence": "high or medium or low", "quote": "direct quote from paper or null", "section": "section name or null", "justification": "brief explanation of label and confidence"},
-  "q2": {"label": "yes or no", "confidence": "high or medium or low", "quote": "direct quote from paper or null", "section": "section name or null", "justification": "brief explanation of label and confidence"},
-  "q3": {"label": "yes or no", "confidence": "high or medium or low", "quote": "direct quote from paper or null", "section": "section name or null", "justification": "brief explanation of label and confidence"},
-  "q4": {"label": "yes or no", "confidence": "high or medium or low", "quote": "direct quote from paper or null", "section": "section name or null", "justification": "brief explanation of label and confidence"}
+  "q1": {"label": "yes or no", "confidence": "must be high or medium or low. never anything else", "quote": "direct quote from paper or null", "section": "section name or null", "justification": "brief explanation of label and confidence"},
+  "q2": {"label": "yes or no", "confidence": "must be high or medium or low. never anything else", "quote": "direct quote from paper or null", "section": "section name or null", "justification": "brief explanation of label and confidence"},
+  "q3": {"label": "yes or no", "confidence": "must be high or medium or low. never anything else", "quote": "direct quote from paper or null", "section": "section name or null", "justification": "brief explanation of label and confidence"},
+  "q4": {"label": "yes or no", "confidence": "must be high or medium or low. never anything else", "quote": "direct quote from paper or null", "section": "section name or null", "justification": "brief explanation of label and confidence"}
 }
 
 Rules for the JSON:
