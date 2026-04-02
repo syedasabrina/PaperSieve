@@ -8,3 +8,5 @@ data/filtered_out/
 results/
 *.pdf
 
+.DS_Store
+**/.DS_Store
