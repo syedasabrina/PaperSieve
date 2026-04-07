@@ -120,3 +120,47 @@ If confidence = low, `ambiguity` flag is also set to true automatically.
   inter-annotator agreement, perspectiv*, crowd truth, 
   multiple valid labels, annotation variability
 - Estimated size: 3000+ papers
+
+
+## Validation Results — Phase A Pilot Run
+
+The pipeline was validated against a manually labeled gold set of 36 papers before running on the full corpus. Each paper was independently labeled by the researcher across all four screening criteria and assigned a final bucket.
+
+### Gold Set Composition
+
+| Bucket | Count |
+|---|---|
+| to_read | 13 |
+| maybe_recheck | 3 |
+| maybe_borderline | 2 |
+| filtered_out | 18 |
+| **Total** | **36** |
+
+### Per-Criterion Label Agreement
+
+| Criterion | Question | Agreement |
+|---|---|---|
+| Q1 | Does the paper explicitly call an NLP task subjective or objective? | 27/36 (75%) |
+| Q2 | Does it define or frame what subjectivity means in any way? | 31/36 (86%) |
+| Q3 | Does it discuss annotation disagreement or inter-annotator agreement? | 26/36 (72%) |
+| Q4 | Does it discuss how to handle subjectivity? | 31/36 (86%) |
+
+### Bucket Agreement
+
+| Metric | Result |
+|---|---|
+| Exact bucket match | 20/36 (55%) |
+| to_read papers incorrectly filtered out | 0/36 (0%) |
+
+### Interpretation
+
+Per-criterion agreement ranged from 72% to 86%. Q3 showed the lowest agreement — the pipeline was more permissive than the human reviewer, tending to count general annotation quality protocols as evidence of disagreement handling. Q1 showed the second-lowest agreement, reflecting difficulty in distinguishing direct author claims from attributed statements in cited works.
+
+Bucket-level exact match was 55%. However, the safety check reveals that no relevant papers were incorrectly excluded — all mismatches involved papers being routed to a higher bucket than the gold label assigned, never a lower one. This is the preferred direction of error for a screening tool, where the cost of missing a relevant paper is higher than the cost of including an irrelevant one.
+
+### Known Limitations
+
+- The pipeline occasionally counts claims attributed to cited works as the authors' own claims, inflating Q1 and Q2 yes rates.
+- General annotation protocols (e.g., multi-phase labeling for consistency) are sometimes counted as Q3 yes answers despite not constituting methodological intervention on disagreement.
+- Non-determinism in Gemini outputs means identical papers may receive different labels across runs. Temperature is set to 0.0 to minimize this, but some variance remains.
+- The gold set of 36 papers is sufficient for pilot validation but not for statistically robust agreement reporting. A larger gold set is recommended before drawing strong conclusions about pipeline accuracy.
