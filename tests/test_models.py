@@ -29,7 +29,7 @@ def test_valid_paper_record():
         q3 = make_criterion(CriterionLabel.NO, ConfidenceLevel.HIGH),
         q4 = make_criterion(CriterionLabel.NO, ConfidenceLevel.HIGH),
         score = 2,
-        bucket = FinalBucket.MAYBE,
+        bucket = FinalBucket.MAYBE_BORDERLINE,
         manual_review = False,
         model_version='gemini',
         prompt_version='v1',
