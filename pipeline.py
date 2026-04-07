@@ -49,7 +49,6 @@ def run(
     rankings_csv = run_dir / "rankings.csv"
     processed_ids: set[str] = set()
     if rankings_csv.exists():
-        import csv
         with rankings_csv.open("r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
