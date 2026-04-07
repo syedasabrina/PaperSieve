@@ -146,7 +146,25 @@ Temperature is set to 0.0 for deterministic outputs across both passes.
 
 ## Validation
 
-The pipeline was validated against a manually labeled gold set of 36 papers before running on the full corpus. Agreement was measured per criterion and per bucket. Known limitations are documented in the accompanying position paper.
+The pipeline was validated against a manually labeled gold set of 36 papers before running on the full corpus.
+
+### Per-criterion label agreement
+
+| Criterion | Question | Agreement |
+|---|---|---|
+| Q1 | Does the paper explicitly call an NLP task subjective or objective? | 27/36 (75%) |
+| Q2 | Does it define or frame what subjectivity means in any way? | 31/36 (86%) |
+| Q3 | Does it discuss annotation disagreement or inter-annotator agreement? | 26/36 (72%) |
+| Q4 | Does it discuss how to handle subjectivity? | 31/36 (86%) |
+
+### Bucket agreement
+
+| Metric | Result |
+|---|---|
+| Exact bucket match | 20/36 (55%) |
+| to_read papers incorrectly filtered out | 0/36 (0%) |
+
+Bucket-level exact match was 55%. However, no relevant papers were incorrectly excluded — all mismatches involved papers being routed to a higher bucket than the gold label assigned. This is the preferred direction of error for a screening tool. Known limitations are documented in the accompanying position paper.
 
 ---
 
