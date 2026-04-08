@@ -124,7 +124,7 @@ If confidence = low, `ambiguity` flag is also set to true automatically.
 
 ## Validation Results — Phase A Pilot Run
 
-The pipeline was validated against a manually labeled gold set of 36 papers before running on the full corpus. Each paper was independently labeled by the researcher across all four screening criteria and assigned a final bucket.
+The pipeline was validated against a manually labeled gold set of 36 papers before running on the full corpus. Each paper was independently labeled by the researcher across all four screening criteria and assigned a final bucket. Two model configurations were tested: `gemini-2.5-flash` and `gemini-2.5-pro`.
 
 ### Gold Set Composition
 
@@ -138,29 +138,33 @@ The pipeline was validated against a manually labeled gold set of 36 papers befo
 
 ### Per-Criterion Label Agreement
 
-| Criterion | Question | Agreement |
+| Criterion | Question | Flash | Pro |
+|---|---|---|---|
+| Q1 | Does the paper explicitly call an NLP task subjective or objective? | 27/36 (75%) | 29/36 (80%) |
+| Q2 | Does it define or frame what subjectivity means in any way? | 33/36 (91%) | 33/36 (91%) |
+| Q3 | Does it discuss annotation disagreement or inter-annotator agreement? | 29/36 (80%) | 30/36 (83%) |
+| Q4 | Does it discuss how to handle subjectivity? | 31/36 (86%) | 31/36 (86%) |
+
+### Bucket and Classification Metrics
+
+| Metric | Flash | Pro |
 |---|---|---|
-| Q1 | Does the paper explicitly call an NLP task subjective or objective? | 27/36 (75%) |
-| Q2 | Does it define or frame what subjectivity means in any way? | 31/36 (86%) |
-| Q3 | Does it discuss annotation disagreement or inter-annotator agreement? | 26/36 (72%) |
-| Q4 | Does it discuss how to handle subjectivity? | 31/36 (86%) |
+| Exact bucket match | 24/36 (66%) | 25/36 (69%) |
+| Precision (to_read) | 0.79 | 0.85 |
+| Recall (to_read) | 0.85 | 0.85 |
+| False positive rate | 0.13 | 0.09 |
+| to_read papers incorrectly filtered out | 0/36 (0%) | 0/36 (0%) |
 
-### Bucket Agreement
+### Model Decision
 
-| Metric | Result |
-|---|---|
-| Exact bucket match | 20/36 (55%) |
-| to_read papers incorrectly filtered out | 0/36 (0%) |
+`gemini-2.5-pro` was selected for the full corpus run. Pro outperformed Flash on every metric except recall, which remained equal at 0.85. Precision improved from 0.79 to 0.85 and false positive rate dropped from 0.13 to 0.09, meaning fewer irrelevant papers will be incorrectly routed to `to_read`. Both models achieved zero unsafe errors — no relevant paper was sent to `filtered_out` in either configuration.
 
-### Interpretation
-
-Per-criterion agreement ranged from 72% to 86%. Q3 showed the lowest agreement — the pipeline was more permissive than the human reviewer, tending to count general annotation quality protocols as evidence of disagreement handling. Q1 showed the second-lowest agreement, reflecting difficulty in distinguishing direct author claims from attributed statements in cited works.
-
-Bucket-level exact match was 55%. However, the safety check reveals that no relevant papers were incorrectly excluded — all mismatches involved papers being routed to a higher bucket than the gold label assigned, never a lower one. This is the preferred direction of error for a screening tool, where the cost of missing a relevant paper is higher than the cost of including an irrelevant one.
+The two remaining false negatives (`W06-0303` and `2025.emnlp-main.1261`) are known edge cases where Q1 strictness causes the pipeline to miss papers that discuss subjective content without explicitly labeling the task as subjective. These are documented as a known limitation of the Q1 criterion rather than a prompt failure.
 
 ### Known Limitations
 
 - The pipeline occasionally counts claims attributed to cited works as the authors' own claims, inflating Q1 and Q2 yes rates.
 - General annotation protocols (e.g., multi-phase labeling for consistency) are sometimes counted as Q3 yes answers despite not constituting methodological intervention on disagreement.
+- Appendix-only evidence was occasionally assigned high confidence despite the rubric requiring low confidence for appendix sources, causing some irrelevant papers to score highly.
 - Non-determinism in Gemini outputs means identical papers may receive different labels across runs. Temperature is set to 0.0 to minimize this, but some variance remains.
 - The gold set of 36 papers is sufficient for pilot validation but not for statistically robust agreement reporting. A larger gold set is recommended before drawing strong conclusions about pipeline accuracy.

@@ -30,6 +30,9 @@ scorer.py           ← persist results to JSON log and rankings CSV
     │
     ▼
 route_files.py      ← copy PDFs to bucket folders based on run results
+    │
+    ▼
+validate.py       — compare pipeline results against gold labels
 ```
 
 The retry loop is what makes this an agent rather than a simple batch script. After the first Gemini pass, any criterion with low confidence triggers a second targeted call on the specific section where evidence was (or was not) found. Both responses are logged.
@@ -76,6 +79,7 @@ PaperSieve/
 │   └── scorer.py         — JSON logging and CSV appending
 ├── scripts/
 │   └── route_files.py    — copy PDFs to bucket folders from a run's CSV
+│   └── validate.py       — compare pipeline results against gold labels
 ├── prompts/
 │   ├── screening_v1.txt  — main screening prompt
 │   ├── retry_v1.txt      — targeted retry prompt for low-confidence criteria
@@ -106,7 +110,7 @@ PaperSieve/
 **Run the screening pipeline:**
 
 ```bash
-python pipeline.py --input-dir data/papers --run-id run_001
+python main.py --input-dir data/papers --run-id run_001
 ```
 
 If the run crashes, re-running the same command resumes from where it stopped — already processed papers are skipped automatically.
@@ -117,12 +121,10 @@ If the run crashes, re-running the same command resumes from where it stopped �
 python scripts/route_files.py --run-id run_001
 ```
 
-**Re-screen a maybe folder in a new run:**
-
+**Validate results against gold labels:**
 ```bash
-python pipeline.py --input-dir data/maybe_recheck --run-id run_002
+python scripts/validate.py --run-id run_001
 ```
-
 ---
 
 ## Output files
@@ -146,25 +148,29 @@ Temperature is set to 0.0 for deterministic outputs across both passes.
 
 ## Validation
 
-The pipeline was validated against a manually labeled gold set of 36 papers before running on the full corpus.
+The pipeline was validated against a manually labeled gold set of 36 papers using `gemini-2.5-pro` before running on the full corpus.
 
 ### Per-criterion label agreement
 
 | Criterion | Question | Agreement |
 |---|---|---|
-| Q1 | Does the paper explicitly call an NLP task subjective or objective? | 27/36 (75%) |
-| Q2 | Does it define or frame what subjectivity means in any way? | 31/36 (86%) |
-| Q3 | Does it discuss annotation disagreement or inter-annotator agreement? | 26/36 (72%) |
+| Q1 | Does the paper explicitly call an NLP task subjective or objective? | 29/36 (80%) |
+| Q2 | Does it define or frame what subjectivity means in any way? | 33/36 (91%) |
+| Q3 | Does it discuss annotation disagreement or inter-annotator agreement? | 30/36 (83%) |
 | Q4 | Does it discuss how to handle subjectivity? | 31/36 (86%) |
 
 ### Bucket agreement
 
 | Metric | Result |
 |---|---|
-| Exact bucket match | 20/36 (55%) |
+| Exact bucket match | 25/36 (69%) |
+| Precision (to_read) | 0.85 |
+| Recall (to_read) | 0.85 |
+| False positive rate | 0.09 |
 | to_read papers incorrectly filtered out | 0/36 (0%) |
 
-Bucket-level exact match was 55%. However, no relevant papers were incorrectly excluded — all mismatches involved papers being routed to a higher bucket than the gold label assigned. This is the preferred direction of error for a screening tool. Known limitations are documented in the accompanying position paper.
+Recall of 0.85 means 11 of 13 relevant papers were correctly identified. No relevant papers were sent to `filtered_out`. Known limitations are documented in `PROJECT_SCOPE.md`.
+
 
 ---
 

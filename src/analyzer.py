@@ -31,7 +31,7 @@ from src.extractor import extract_sections
 load_dotenv()
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = "gemini-2.5-pro"
 RETRY_MODEL_NAME = "gemini-2.5-pro"
 PROMPT_VERSION = "v1"
 MAX_RETRIES_PER_CRITERION = 1

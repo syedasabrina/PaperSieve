@@ -6,15 +6,15 @@ Your task is to analyze the provided sections of an NLP paper and answer four ye
 
 GLOBAL RULES
 
-- A criterion can be marked yes only if there is a supporting quote from the paper text.
+- A criterion can be marked yes only if and only if there is a supporting quote from the paper text.
 - If quote support is weak or indirect, set confidence to low.
-- If no quote is found for a claimed yes, set label to no.
 - Quote must be a direct extract from the paper — not a paraphrase.
 - Quote length: 1–2 sentences (max 3).
 - Preferred quote sources: abstract, introduction, conclusion.
-- Allowed fallback: methods, results, appendix if explicit signal exists there.
+- Allowed fallback: methods, results if explicit signal exists there. Appendix is allowed but confidence must be set to low regardless of quote quality.
 - Do not infer subjectivity. Do not Hallucinate. Only label yes if the paper's own authors explicitly use the term "subjective", "subjectivity", or a direct stated synonym. Your job is to detect what the authors claim, not to interpret whether their content implies subjectivity.
 - Only consider claims made directly by the authors of the paper being screened in their own voice. Any sentence that names another paper, cites authors in parentheses (e.g. Smith et al., 2023), or describes what another system or model found, must be treated as background literature and ignored as evidence for any yes answer.
+- Do not use the same single sentence as evidence for more than one criterion. Each yes answer requires its own distinct supporting quote.
 
 ---
 

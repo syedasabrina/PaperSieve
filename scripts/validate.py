@@ -74,6 +74,45 @@ def validate(
             typer.echo(f"  {pid}")
 
 
+    #Precision, Recall, FP rate: to_read= positive class
+    tp = sum(1 for pid in common if gold[pid]['bucket'].lower() == "to_read" and prediction[pid]['bucket'].lower()=='to_read')
+    tn = sum(1 for pid in common if gold[pid]['bucket'].lower() != "to_read" and prediction[pid]['bucket'].lower()!='to_read')
+    fp = sum(1 for pid in common if gold[pid]['bucket'].lower() != "to_read" and prediction[pid]['bucket'].lower()=='to_read')
+    fn = sum(1 for pid in common if gold[pid]['bucket'].lower() == "to_read" and prediction[pid]['bucket'].lower()!='to_read')
+
+    precision = tp/(tp+fp) if (tp+fp)>0 else 0.0
+    recall = tp/(tp+fn) if (tp+fn)>0 else 0.0
+    fpr = fp/(tn+fp) if (tn+fp)>0 else 0.0
+
+    typer.echo(f"\n--- Precision / Recall / FPR (to_read as positive class) ---")
+    typer.echo(f"True positives:  {tp}")
+    typer.echo(f"False negatives: {fn}")
+    typer.echo(f"False positives: {fp}")
+    typer.echo(f"True negatives:  {tn}")
+    typer.echo(f"Precision:       {precision:.2f}")
+    typer.echo(f"Recall:          {recall:.2f}")
+    typer.echo(f"False pos rate:  {fpr:.2f}")
+
+
+    false_negatives = [
+        pid for pid in common
+        if gold[pid]["bucket"] == "to_read" and prediction[pid]["bucket"] != "to_read"
+    ]
+    false_positives = [
+        pid for pid in common
+        if gold[pid]["bucket"] != "to_read" and prediction[pid]["bucket"] == "to_read"
+    ]
+    if false_negatives:
+        typer.echo(f"\nFalse negatives (missed to_read):")
+        for pid in false_negatives:
+            typer.echo(f"  {pid} → predicted: {prediction[pid]['bucket']}")
+            
+    if false_positives:
+        typer.echo(f"\nFalse positives (wrongly sent to to_read):")
+        for pid in false_positives:
+            typer.echo(f"  {pid} → gold: {gold[pid]['bucket']}")
+
+
 if __name__ == "__main__":
     app()
 
