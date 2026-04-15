@@ -75,7 +75,7 @@ def parse_response(response_text: str) -> dict[str, CriterionResult]:
     for key in ["q1", "q2", "q3", "q4"]:
         q = data[key]
 
-        raw_confidence = q["confidence"].lower()
+        raw_confidence = (q.get("confidence") or "low").lower()
         if raw_confidence not in ("high", "medium", "low"):
             raw_confidence = "low"
 
@@ -138,7 +138,7 @@ def run_retry(criterion_id: str, previous_result: CriterionResult, sections: dic
 
     valid_sections = {s.value for s in PaperSections}
 
-    raw_confidence = q["confidence"].lower()
+    raw_confidence = (q.get("confidence") or "low").lower()
     if raw_confidence not in ("high", "medium", "low"):
         raw_confidence = "low"
 
