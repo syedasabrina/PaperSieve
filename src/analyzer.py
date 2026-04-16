@@ -184,9 +184,9 @@ def analyze_paper(pdf_path: Path, paper_id: str, model: str = MODEL_NAME, retry_
     score = sum(1 for r in results.values() if r.label == CriterionLabel.YES)
     any_low = any(r.confidence == ConfidenceLevel.LOW for r in results.values())
 
-    if score >= 3 and not any_low:
+    if score > 3 and not any_low:
         bucket = FinalBucket.TO_READ
-    elif score >= 3 and any_low:
+    elif (score > 3 and any_low) or (score==3 and not any_low):
         bucket = FinalBucket.MAYBE_RECHECK
     elif score == 0 and not any_low:
         bucket = FinalBucket.FILTERED_OUT

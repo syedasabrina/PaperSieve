@@ -1,7 +1,7 @@
 # Project Scope
 
 ## Project Title (Loosely)
-PaperSieve: An LLM-Assisted Literature Screening Pipeline for Subjectivity in NLP Tasks
+PaperSieve: A Two-Model Agentic Screening Pipeline for Subjectivity in NLP Tasks
 
 ## One-Line Summary
 An automated pipeline that screens and ranks NLP papers by their relevance 
@@ -28,17 +28,17 @@ for manual review.
 
 **What the agent does:**
 - Extracts text from PDFs (abstract, introduction, conclusion)
-- Screens each paper against four structured discovery criteria
+- Screens each paper against four structured discovery criteria using Gemini Flash
+- Escalates low-confidence results to Gemini Pro with targeted section re-examination
 - Scores, tags, and routes papers into relevance buckets
-- Extracts subjectivity-related passages for exploratory reading
+- Auto-retries any papers that failed due to API errors
 - Logs all model decisions with evidence quotes for reproducibility
 
 **Input:** Folder of PDFs (`data/papers/`)
 
 **Outputs:**
-- `results/rankings.csv` — full ranked list with scores and tags
-- `results/passages.csv` — extracted subjectivity-related sentences
-- `results/logs/<paper_id>.json` — per-paper model evidence logs
+- `results/<run_id>/rankings.csv` — full ranked list with scores and tags
+- `results/<run_id>/logs/<paper_id>.json` — per-paper model evidence logs
 - `data/to_read/` — PDFs scoring 3-4 (high relevance)
 - `data/maybe_recheck/` — PDFs scoring 3-4 with low confidence evidence
 - `data/maybe_borderline/` — PDFs scoring 1-2 or uncertain noes
@@ -157,9 +157,7 @@ The pipeline was validated against a manually labeled gold set of 36 papers befo
 
 ### Model Decision
 
-`gemini-2.5-pro` was selected for the full corpus run. Pro outperformed Flash on every metric except recall, which remained equal at 0.85. Precision improved from 0.79 to 0.85 and false positive rate dropped from 0.13 to 0.09, meaning fewer irrelevant papers will be incorrectly routed to `to_read`. Both models achieved zero unsafe errors — no relevant paper was sent to `filtered_out` in either configuration.
-
-The two remaining false negatives (`W06-0303` and `2025.emnlp-main.1261`) are known edge cases where Q1 strictness causes the pipeline to miss papers that discuss subjective content without explicitly labeling the task as subjective. These are documented as a known limitation of the Q1 criterion rather than a prompt failure.
+The final pipeline uses a two-model design: `gemini-2.5-flash` for pass 1 on all papers, escalating to `gemini-2.5-pro` for any criterion returning low confidence. This balances cost and speed on the bulk of the corpus while applying stronger reasoning to ambiguous cases.
 
 ### Known Limitations
 
