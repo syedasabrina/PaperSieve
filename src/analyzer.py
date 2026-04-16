@@ -19,6 +19,7 @@
 from __future__ import annotations
 import os
 import json
+import time
 from pathlib import Path
 from datetime import datetime, timezone
 from dotenv import load_dotenv
@@ -31,27 +32,40 @@ from src.extractor import extract_sections
 load_dotenv()
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-MODEL_NAME = "gemini-2.5-pro"
+MODEL_NAME = "gemini-2.5-flash"
 RETRY_MODEL_NAME = "gemini-2.5-pro"
 PROMPT_VERSION = "v1"
 MAX_RETRIES_PER_CRITERION = 1
 
 
-def build_prompt(sections: dict[PaperSections, str]) -> str :
+def call_with_backoff(fn, *args, max_attempts: int = 5, wait_seconds: int = 30, **kwargs):
+    for attempt in range(max_attempts):
+        try:
+            return fn(*args, **kwargs)
+        except Exception as e:
+            if "503" in str(e) and attempt < max_attempts - 1:
+                wait = wait_seconds * (attempt + 1)
+                print(f"  503 error, waiting {wait}s (attempt {attempt + 1}/{max_attempts})")
+                time.sleep(wait)
+                continue
+            raise
+
+
+def build_prompt(sections: dict[PaperSections, str]) -> str:
     prompt_path = Path(__file__).parent.parent / "prompts" / "screening_v1.txt"
     template = prompt_path.read_text()
 
     section_text = ""
-    
+
     for section, text in sections.items():
         section_text += f"\n\n### {section.value.upper()}\n{text}"
-    
+
     return template.replace("{{PAPER_SECTIONS}}", section_text)
 
 
 def call_gemini(prompt: str, model: str = MODEL_NAME) -> str:
     response = client.models.generate_content(
-        model=model, 
+        model=model,
         contents=prompt,
         config=types.GenerateContentConfig(temperature=0.0),
     )
@@ -109,7 +123,7 @@ def build_retry_prompt(criterion_id: str, previous_result: CriterionResult, sect
     )
 
 
-def run_retry(criterion_id: str, previous_result: CriterionResult, sections: dict[PaperSections, str]) -> CriterionResult:
+def run_retry(criterion_id: str, previous_result: CriterionResult, sections: dict[PaperSections, str], model: str = RETRY_MODEL_NAME) -> CriterionResult:
     section_key = None
     if previous_result.section:
         try:
@@ -124,7 +138,7 @@ def run_retry(criterion_id: str, previous_result: CriterionResult, sections: dic
     section_text = sections[section_key]
 
     prompt = build_retry_prompt(criterion_id, previous_result, section_text)
-    raw = call_gemini(prompt, model=RETRY_MODEL_NAME)
+    raw = call_with_backoff(call_gemini, prompt, model=model)
 
     clean = raw.strip()
     if clean.startswith("```"):
@@ -153,24 +167,21 @@ def run_retry(criterion_id: str, previous_result: CriterionResult, sections: dic
     )
 
 
-def analyze_paper(pdf_path: Path, paper_id: str) -> PaperRecord:
+def analyze_paper(pdf_path: Path, paper_id: str, model: str = MODEL_NAME, retry_model: str = RETRY_MODEL_NAME) -> PaperRecord:
     sections = extract_sections(pdf_path)
     prompt = build_prompt(sections)
-    raw = call_gemini(prompt)
+    raw = call_with_backoff(call_gemini, prompt, model=model)
     results = parse_response(raw)
 
-    # Retry any low-confidence criteria
     retry_used = False
     retry_count = 0
     for criterion_id, result in results.items():
         if result.confidence == ConfidenceLevel.LOW and retry_count < MAX_RETRIES_PER_CRITERION:
-            results[criterion_id] = run_retry(criterion_id, result, sections)
+            results[criterion_id] = run_retry(criterion_id, result, sections, model=retry_model)
             retry_used = True
             retry_count += 1
 
-    # Compute score and bucket
     score = sum(1 for r in results.values() if r.label == CriterionLabel.YES)
-
     any_low = any(r.confidence == ConfidenceLevel.LOW for r in results.values())
 
     if score >= 3 and not any_low:
@@ -182,7 +193,6 @@ def analyze_paper(pdf_path: Path, paper_id: str) -> PaperRecord:
     else:
         bucket = FinalBucket.MAYBE_BORDERLINE
 
-    # manual_review flag
     manual_review = any_low
     manual_review_reason = (
         "One or more criteria still low-confidence after retry" if any_low else None
@@ -199,7 +209,7 @@ def analyze_paper(pdf_path: Path, paper_id: str) -> PaperRecord:
         bucket=bucket,
         manual_review=manual_review,
         manual_review_reason=manual_review_reason,
-        model_version=MODEL_NAME,
+        model_version=model,
         prompt_version=PROMPT_VERSION,
         timestamp=datetime.now(timezone.utc).isoformat(),
         retry_used=retry_used,
