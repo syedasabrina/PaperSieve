@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 import os
+import re
 import json
 import time
 from pathlib import Path
@@ -77,6 +78,8 @@ def parse_response(response_text: str) -> dict[str, CriterionResult]:
     if clean.startswith("```"):
         clean = clean.split("\n", 1)[1]
         clean = clean.split("```", 1)[0]
+
+    clean = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', clean)
 
     try:
         data = json.loads(clean)
