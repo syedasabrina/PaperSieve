@@ -39,10 +39,10 @@ for manual review.
 **Outputs:**
 - `results/<run_id>/rankings.csv` — full ranked list with scores and tags
 - `results/<run_id>/logs/<paper_id>.json` — per-paper model evidence logs
-- `data/to_read/` — PDFs scoring 3-4 (high relevance)
-- `data/maybe_recheck/` — PDFs scoring 3-4 with low confidence evidence
-- `data/maybe_borderline/` — PDFs scoring 1-2 or uncertain noes
-- `data/filtered_out/` — PDFs scoring 0 (not relevant)
+- `data/to_read/` — PDFs scoring 4 across all criteria with no low confidence
+- `data/maybe_recheck/` — PDFs scoring 4 with any low confidence, or scoring 3 with no low confidence
+- `data/maybe_borderline/` — PDFs scoring 1-2, or scoring 0 with any low confidence
+- `data/filtered_out/` — PDFs scoring 0 with no low confidence
 
 ## Explicit Non-Goals
 - The agent does NOT generate theoretical claims
@@ -66,11 +66,12 @@ the final theoretical framework.
 
 ## Scoring and Routing Rules
 - Score = number of "yes" answers (0–4)
-- Score 3–4, all confidence medium or high → `data/to_read/`
-- Score 3–4, any confidence low → `data/maybe_recheck/`
+- Score 4, no low confidence → `data/to_read/`
+- Score 4, any low confidence → `data/maybe_recheck/`
+- Score 3, no low confidence → `data/maybe_recheck/`
 - Score 1–2, any confidence → `data/maybe_borderline/`
-- Score 0, any confidence low → `data/maybe_borderline/`
-- Score 0, all confidence medium or high → `data/filtered_out/`
+- Score 0, any low confidence → `data/maybe_borderline/`
+- Score 0, no low confidence → `data/filtered_out/`
 - If confidence = low → `manual_review` flag added
 
 ## Inclusion and Exclusion Rules
@@ -124,7 +125,7 @@ If confidence = low, `ambiguity` flag is also set to true automatically.
 
 ## Validation Results — Phase A Pilot Run
 
-The pipeline was validated against a manually labeled gold set of 36 papers before running on the full corpus. Each paper was independently labeled by the researcher across all four screening criteria and assigned a final bucket. Two model configurations were tested: `gemini-2.5-flash` and `gemini-2.5-pro`.
+The pipeline was validated against a manually labeled gold set of 36 papers before running on the full corpus. Each paper was independently labeled by the researcher across all four screening criteria and assigned a final bucket. Three configurations were evaluated: Flash-only, Pro-only, and the final two-model pipeline (Flash pass 1, Pro retry on low-confidence criteria) with the current routing logic.
 
 ### Gold Set Composition
 
@@ -138,26 +139,26 @@ The pipeline was validated against a manually labeled gold set of 36 papers befo
 
 ### Per-Criterion Label Agreement
 
-| Criterion | Question | Flash | Pro |
-|---|---|---|---|
-| Q1 | Does the paper explicitly call an NLP task subjective or objective? | 27/36 (75%) | 29/36 (80%) |
-| Q2 | Does it define or frame what subjectivity means in any way? | 33/36 (91%) | 33/36 (91%) |
-| Q3 | Does it discuss annotation disagreement or inter-annotator agreement? | 29/36 (80%) | 30/36 (83%) |
-| Q4 | Does it discuss how to handle subjectivity? | 31/36 (86%) | 31/36 (86%) |
+| Criterion | Question | Flash | Pro | Two-Model |
+|---|---|---|---|---|
+| Q1 | Does the paper explicitly call an NLP task subjective or objective? | 27/36 (75%) | 29/36 (80%) | 29/36 (80%) |
+| Q2 | Does it define or frame what subjectivity means in any way? | 33/36 (91%) | 33/36 (91%) | 33/36 (91%) |
+| Q3 | Does it discuss annotation disagreement or inter-annotator agreement? | 29/36 (80%) | 30/36 (83%) | 30/36 (83%) |
+| Q4 | Does it discuss how to handle subjectivity? | 31/36 (86%) | 31/36 (86%) | 32/36 (88%) |
 
 ### Bucket and Classification Metrics
 
-| Metric | Flash | Pro |
-|---|---|---|
-| Exact bucket match | 24/36 (66%) | 25/36 (69%) |
-| Precision (to_read) | 0.79 | 0.85 |
-| Recall (to_read) | 0.85 | 0.85 |
-| False positive rate | 0.13 | 0.09 |
-| to_read papers incorrectly filtered out | 0/36 (0%) | 0/36 (0%) |
+| Metric | Flash | Pro | Two-Model |
+|---|---|---|---|
+| Exact bucket match | 24/36 (66%) | 25/36 (69%) | 22/36 (61%) |
+| Precision (to_read) | 0.79 | 0.85 | 1.00 |
+| Recall (to_read) | 0.85 | 0.85 | 0.54 |
+| False positive rate | 0.13 | 0.09 | 0.00 |
+| to_read papers incorrectly filtered out | 0/36 (0%) | 0/36 (0%) | 0/36 (0%) |
 
 ### Model Decision
 
-The final pipeline uses a two-model design: `gemini-2.5-flash` for pass 1 on all papers, escalating to `gemini-2.5-pro` for any criterion returning low confidence. This balances cost and speed on the bulk of the corpus while applying stronger reasoning to ambiguous cases.
+The final pipeline uses a two-model design: `gemini-2.5-flash` for pass 1 on all papers, escalating to `gemini-2.5-pro` for any criterion returning low confidence. The current routing logic requires score==4 with no low-confidence criteria for `to_read` placement, which yields perfect precision at the cost of recall. Five of the six false negatives are score==3 papers routed to `maybe_recheck` — they are not lost, but require manual review. The sixth (`2025.emnlp-main.1261`) is a documented false negative caused by Q1 strictness.
 
 ### Known Limitations
 
@@ -166,3 +167,4 @@ The final pipeline uses a two-model design: `gemini-2.5-flash` for pass 1 on all
 - Appendix-only evidence was occasionally assigned high confidence despite the rubric requiring low confidence for appendix sources, causing some irrelevant papers to score highly.
 - Non-determinism in Gemini outputs means identical papers may receive different labels across runs. Temperature is set to 0.0 to minimize this, but some variance remains.
 - The gold set of 36 papers is sufficient for pilot validation but not for statistically robust agreement reporting. A larger gold set is recommended before drawing strong conclusions about pipeline accuracy.
+- The stricter routing logic (score==4 only for `to_read`) trades recall for precision. Researchers prioritizing coverage over precision should also review the `maybe_recheck` bucket.

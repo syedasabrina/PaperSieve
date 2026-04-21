@@ -1,3 +1,4 @@
+
 # PaperSieve
 
 A two-model agentic screening pipeline that reduces a corpus of 3000+ NLP papers to a ranked, categorized reading list. Built to support a PhD research project on subjectivity in NLP tasks.
@@ -57,11 +58,12 @@ Each answer includes a direct quote from the paper, the section it was found in,
 
 | Score | Confidence | Bucket |
 |---|---|---|
-| 3–4 | All medium or high | `to_read` |
-| 3–4 | Any low | `maybe_recheck` |
+| 4 | No low confidence | `to_read` |
+| 4 | Any low | `maybe_recheck` |
+| 3 | No low confidence | `maybe_recheck` |
 | 1–2 | Any | `maybe_borderline` |
 | 0 | Any low | `maybe_borderline` |
-| 0 | All medium or high | `filtered_out` |
+| 0 | No low confidence | `filtered_out` |
 
 Papers with any low-confidence criterion are flagged `manual_review=true` regardless of bucket.
 
@@ -90,10 +92,10 @@ PaperSieve/
 │   └── test_scorer.py
 ├── data/
 │   ├── papers/            — input PDFs (gitignored)
-│   ├── to_read/           — high relevance
-│   ├── maybe_recheck/     — high score, weak evidence
-│   ├── maybe_borderline/  — low score or uncertain noes
-│   └── filtered_out/      — no signal found
+│   ├── to_read/           — score 4, no low confidence
+│   ├── maybe_recheck/     — score 4 with any low confidence, or score 3 with no low confidence
+│   ├── maybe_borderline/  — score 1-2, or score 0 with any low confidence
+│   └── filtered_out/      — score 0, no low confidence
 ├── results/
 │   └── <run_id>/
 │       ├── rankings.csv   — one row per paper with scores and buckets
@@ -156,28 +158,28 @@ Temperature is set to 0.0 for deterministic outputs. Both models are configurabl
 
 ## Validation
 
-The pipeline was validated against a manually labeled gold set of 36 papers before running on the full corpus. Two model configurations were compared.
+The pipeline was validated against a manually labeled gold set of 36 papers before running on the full corpus. Three configurations were evaluated: Flash-only, Pro-only, and the final two-model pipeline (Flash pass 1, Pro retry on low-confidence criteria) with the current routing logic.
 
 ### Per-criterion label agreement
 
-| Criterion | Question | Flash | Pro |
-|---|---|---|---|
-| Q1 | Does the paper explicitly call an NLP task subjective or objective? | 27/36 (75%) | 29/36 (80%) |
-| Q2 | Does it define or frame what subjectivity means in any way? | 33/36 (91%) | 33/36 (91%) |
-| Q3 | Does it discuss annotation disagreement or inter-annotator agreement? | 29/36 (80%) | 30/36 (83%) |
-| Q4 | Does it discuss how to handle subjectivity? | 31/36 (86%) | 31/36 (86%) |
+| Criterion | Question | Flash | Pro | Two-Model |
+|---|---|---|---|---|
+| Q1 | Does the paper explicitly call an NLP task subjective or objective? | 27/36 (75%) | 29/36 (80%) | 29/36 (80%) |
+| Q2 | Does it define or frame what subjectivity means in any way? | 33/36 (91%) | 33/36 (91%) | 33/36 (91%) |
+| Q3 | Does it discuss annotation disagreement or inter-annotator agreement? | 29/36 (80%) | 30/36 (83%) | 30/36 (83%) |
+| Q4 | Does it discuss how to handle subjectivity? | 31/36 (86%) | 31/36 (86%) | 32/36 (88%) |
 
 ### Classification metrics
 
-| Metric | Flash | Pro |
-|---|---|---|
-| Exact bucket match | 24/36 (66%) | 25/36 (69%) |
-| Precision (to_read) | 0.79 | 0.85 |
-| Recall (to_read) | 0.85 | 0.85 |
-| False positive rate | 0.13 | 0.09 |
-| to_read papers incorrectly filtered out | 0/36 (0%) | 0/36 (0%) |
+| Metric | Flash | Pro | Two-Model |
+|---|---|---|---|
+| Exact bucket match | 24/36 (66%) | 25/36 (69%) | 22/36 (61%) |
+| Precision (to_read) | 0.79 | 0.85 | 1.00 |
+| Recall (to_read) | 0.85 | 0.85 | 0.54 |
+| False positive rate | 0.13 | 0.09 | 0.00 |
+| to_read papers incorrectly filtered out | 0/36 (0%) | 0/36 (0%) | 0/36 (0%) |
 
-Pro outperforms Flash on every metric except recall, which is equal at 0.85. The two-model design uses Flash for pass 1 and Pro for retries, capturing the cost efficiency of Flash on straightforward cases while applying Pro's stronger reasoning to ambiguous ones. Neither model ever incorrectly sent a relevant paper to `filtered_out`. Known limitations are documented in `PROJECT_SCOPE.md`.
+The two-model pipeline with the current routing logic (score==4, no low confidence for `to_read`) achieves perfect precision — every paper placed in `to_read` is a true positive. The tradeoff is recall: five score==3 papers that were manually judged relevant are routed to `maybe_recheck` rather than `to_read`. These papers are not lost; they require manual review. The sixth false negative (`2025.emnlp-main.1261`) is a documented Q1 strictness failure. Known limitations are documented in `docs/PROJECT_SCOPE.md`.
 
 ---
 
@@ -196,3 +198,5 @@ Add a `.env` file at the project root:
 ```
 GEMINI_API_KEY=your_key_here
 ```
+
+
