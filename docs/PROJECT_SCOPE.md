@@ -44,6 +44,135 @@ for manual review.
 - `data/maybe_borderline/` — PDFs scoring 1-2, or scoring 0 with any low confidence
 - `data/filtered_out/` — PDFs scoring 0 with no low confidence
 
+## Track 3 — Verifiability Pipeline (New)
+**Goal:** Verify whether the working definitions, task taxonomy, and handling 
+methodology taxonomy developed from manual analysis hold up against the full 
+corpus of filtered papers.
+
+**What the pipeline does:**
+- Extracts text from PDFs using the existing `extract_sections()` infrastructure
+- Runs three structured Gemini prompts per paper, one for each analytical dimension:
+  - **Definition prompt** — verifies whether the paper's definition of subjectivity 
+    matches the 3-Pillar Working Definition Framework (Expression, Interpretive, Methodological)
+  - **Taxonomy prompt** — verifies whether the paper's focal task classification 
+    (Subjective / Objective / Mixed) aligns with the Working Task Taxonomy (Category A/B/C) 
+    and maps the paper's reasoning to codes R1–R7
+  - **Handling prompt** — verifies whether the paper's methodology for handling 
+    annotation disagreement and subjectivity matches the Working Handling Taxonomy (A1–A5, B1–B9)
+- Logs one JSON file per paper with all three prompt outputs
+- Writes results to a single `.xlsx` file with four sheets: Definition, Taxonomy, 
+  Handling, and Summary (one row per paper across all three prompts)
+
+**Input:** Any bucket folder of PDFs (starting with `data/to_read/`)
+
+**Outputs:**
+- `results/<run_id>/verifiability.xlsx` — 4-sheet workbook with one row per paper
+- `results/<run_id>/logs/<paper_id>.json` — per-paper model output logs
+
+**Run command:**
+```bash
+python main.py verify run --input-dir data/to_read/ --model gemini-2.5-pro --run-id <run_id>
+```
+
+**Iteration strategy:**
+1. Run on `data/to_read/` first (highest-confidence papers)
+2. Assess accuracy against gold standard (`gold_standard_verifiability.xlsx`)
+3. Adjust working definition, taxonomy, and handling prompts based on gaps found
+4. Increment prompt version (v1 → v2) and re-run
+5. Repeat for `data/maybe_recheck/` once definitions stabilize
+6. By the time `maybe_recheck` is processed, the taxonomy should be near-exhaustive
+
+**Prompt versioning:**
+Prompt files live in `prompts/` and are versioned explicitly:
+- `definition_v1.txt`, `taxonomy_v1.txt`, `handling_v1.txt`
+- Increment version suffix when making substantive changes after assessment
+
+**New files added:**
+- `src/verifier_models.py` — Pydantic models for all three prompt output schemas
+- `src/verify.py` — Gemini call logic, prompt loading, JSON parsing, parse-retry on failure
+- `src/verify_writer.py` — xlsx writer with 4-sheet output and crash recovery
+- `verify_pipeline.py` — orchestrator mirroring `pipeline.py`; supports `--run-id`, `--model`, `--input-dir`
+- `gold_standard_verifiability.xlsx` — manually derived gold standard from the 70 papers 
+  already analyzed by hand, used to assess pipeline accuracy before full run
+
+## Analytical Frameworks (Track 1 outputs, used as Track 3 inputs)
+
+### Working Definition of Subjectivity — 3-Pillar Framework
+
+Subjectivity is the condition in which natural language either expresses or is 
+interpreted through private states — internal mental or emotional experiences 
+such as opinions, evaluations, emotions, and speculations that are not open to 
+objective observation or verification (Quirk et al. 1985; Wiebe 1994; Banfield 1982).
+
+**Pillar 1 — Expression Level (Linguistic / Author-Centric)**  
+Subjectivity is a property of text when the author's primary intention is to 
+communicate a personal, non-objective point of view rather than report verifiable 
+facts. Signals include affective vocabulary, evaluative framing, epistemic markers, 
+and lexical items encoding an inner state. Subjectivity ≠ sentiment or polarity. 
+Subjectivity at this level is graded, not binary.
+
+**Pillar 2 — Interpretive Level (Social / Reader-Centric)**  
+Subjectivity is a property of judgment when no single ground truth exists because 
+the label assigned to a text is inherently rater-dependent. Judgments vary 
+systematically across judges depending on demographics, cultural background, 
+religious beliefs, lived experience, or personal biases. Includes the first-person 
+vs. third-party distinction and metasubjectivity (N13-1081).
+
+**Pillar 3 — Methodological Level (Annotation / Phenomenological)**  
+Subjectivity is present when legitimate disagreement in human annotations 
+constitutes meaningful signal about task ambiguity or diverse valid beliefs, 
+rather than noise or annotator error. Degree of subjectivity is measurable — 
+operationalized as average absolute deviation, pairwise L1 distance, annotation 
+entropy, or inverse output similarity across annotators. Disagreement alone does 
+not confirm subjectivity — its source must be identified.
+
+### Working Task Taxonomy
+
+**Category A — Always Subjective**  
+Tasks where no single ground truth exists and judges legitimately disagree due 
+to perspectival, demographic, or value-based differences. Includes: sentiment 
+analysis, emotion detection, hate speech detection, toxicity detection, 
+misogyny/sexism detection, sarcasm/irony detection, stance detection, argument 
+quality judgment, dialogue act classification, moral value classification, 
+NLG/MT quality evaluation, guilt perception prediction, cognitive appraisal 
+prediction, politeness/offensiveness rating, subjectivity classification, 
+belief identification.
+
+**Category B — Always Objective**  
+Tasks where a single recoverable correct answer exists under a defined schema, 
+independent of annotator perspective. Includes: POS tagging, named entity 
+recognition, factual information extraction.
+
+**Category C — Mixed / Context-Dependent**  
+Tasks whose subjectivity status depends on the dimension annotated, the task 
+framing, or annotation methodology. Includes: summarization, machine translation, 
+lexical complexity prediction, reading fluency assessment, opinion expression 
+annotation, evaluative sentence identification, RST annotation, word sense 
+subjectivity tagging, subjectivity detection, forum thread classification.
+
+**Reasoning Codes (R1–R7):**
+- R1 — Private State Grounding
+- R2 — No Ground Truth
+- R3 — Annotator Identity Dependence
+- R4 — Annotation Divergence as Signal
+- R5 — Metasubjectivity
+- R6 — Prescriptive Suppression
+- R7 — Instance-Level Variability
+
+### Working Handling Taxonomy
+
+**Position A — Subjectivity as Noise:**  
+A1 Majority Voting / Aggregation, A2 Prescriptive Annotation Guidelines,  
+A3 Filtering / Exclusion of Ambiguous Instances, A4 Label Noise Correction,  
+A5 Distant Supervision / Automatic Labeling
+
+**Position B — Subjectivity as Signal:**  
+B1 Non-Aggregation (Preserving Individual Labels), B2 Soft Label Training,  
+B3 Multi-Task Learning with Per-Annotator Heads, B4 Personalized Modeling,  
+B5 Continuous Subjectivity Quantification, B6 Modeling Subjectivity as Auxiliary 
+Prediction Target, B7 Annotator Identity / Context as Model Input,  
+B8 Annotator-Centric Active Learning, B9 Preserving Disagreement in Released Datasets
+
 ## Explicit Non-Goals
 - The agent does NOT generate theoretical claims
 - The agent does NOT define subjectivity
@@ -62,7 +191,6 @@ Four broad yes/no questions applied to every paper:
 
 These are discovery criteria only. They do not constitute 
 the final theoretical framework.
-
 
 ## Scoring and Routing Rules
 - Score = number of "yes" answers (0–4)
@@ -92,7 +220,6 @@ the final theoretical framework.
 If `manual_review=true` (triggered by low confidence), paper is routed 
 to `maybe_recheck` or `maybe_borderline` depending on score, until manually checked.
 
-
 ## What This Project Is NOT Claiming
 - That the pipeline is exhaustive or perfectly accurate
 - That Gemini's judgments replace human scholarly judgment
@@ -121,7 +248,6 @@ If confidence = low, `ambiguity` flag is also set to true automatically.
   inter-annotator agreement, perspectiv*, crowd truth, 
   multiple valid labels, annotation variability
 - Estimated size: 3000+ papers
-
 
 ## Validation Results — Phase A Pilot Run
 

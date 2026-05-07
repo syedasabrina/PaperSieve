@@ -1,0 +1,117 @@
+You are an NLP researcher. Verify the paper's methodology for handling 
+annotation disagreement and subjectivity against our Working Handling Taxonomy.
+
+--- WORKING HANDLING TAXONOMY ---
+
+POSITION A — SUBJECTIVITY AS NOISE (Flattening / Suppression)
+
+A1. MAJORITY VOTING / AGGREGATION
+    Multiple annotators label the same instance; the majority or average
+    label becomes the gold standard. Individual variation is discarded.
+    Variants: simple majority, weighted majority, averaging (continuous
+    scales), two-annotator adjudication with third for tie-breaking,
+    latent class modeling for bias-corrected gold tag, lenient majority
+    (2 of 3 must agree).
+
+A2. PRESCRIPTIVE ANNOTATION GUIDELINES
+    Disagreement treated as a failure of annotation design. Guidelines
+    iterated until disagreement drops. Annotators apply a specified
+    shared belief rather than personal judgment.
+
+A3. FILTERING / EXCLUSION OF AMBIGUOUS INSTANCES
+    Instances where annotators cannot agree are removed from the dataset
+    rather than preserved as a distinct category.
+
+A4. LABEL NOISE CORRECTION
+    High-loss or divergent annotations treated as mislabeled instances
+    and corrected algorithmically (e.g., influence functions, relabeling
+    from neighboring instances).
+
+A5. DISTANT SUPERVISION / AUTOMATIC LABELING
+    Human annotation bypassed entirely; labels derived from structural
+    or distributional properties of the corpus.
+
+POSITION B — SUBJECTIVITY AS SIGNAL (Preservation / Modeling)
+
+B1. NON-AGGREGATION (Preserving Individual Labels)
+    Individual labels from all annotators retained rather than collapsed
+    into a single gold standard. Full distribution of annotations is the
+    target.
+
+B2. SOFT LABEL TRAINING
+    Model trained on the probability distribution of annotator labels
+    rather than a single hard majority-voted label.
+
+B3. MULTI-TASK LEARNING WITH PER-ANNOTATOR HEADS
+    Each annotator modeled as a separate prediction subtask with shared
+    representations and annotator-specific components.
+
+B4. PERSONALIZED MODELING (User-Level Gold Standard)
+    Each user or annotator treated as their own gold standard; models
+    trained or adapted per individual (e.g., collaborative filtering,
+    user-profile embeddings, Z-score normalization per annotator).
+
+B5. CONTINUOUS SUBJECTIVITY QUANTIFICATION
+    Subjectivity operationalized as a measurable, computable property
+    of instances or tasks.
+    Known metrics in the corpus:
+      - Average Absolute Deviation: Σ|label(vi) − aj| / n
+      - Pairwise L1 distance between annotator labels
+      - Annotation entropy (Shannon entropy over label distribution)
+      - Inverse pairwise output similarity (e.g., inverse ROUGE-L)
+      - Annotation variance / standard deviation
+      - Log-likelihood difference across corpus types
+      - Controversy score (diversity of opinions across annotators)
+
+B6. MODELING SUBJECTIVITY AS AUXILIARY PREDICTION TARGET
+    Degree of subjectivity incorporated into model training as an
+    auxiliary task alongside the primary classification objective.
+
+B7. ANNOTATOR IDENTITY / CONTEXT AS MODEL INPUT
+    Annotator demographics, sentiment, identity, or past behavior
+    incorporated as a feature or embedding in the model.
+
+B8. ANNOTATOR-CENTRIC ACTIVE LEARNING
+    Data selection strategies target individual annotators to ensure
+    minority perspectives are captured in training.
+
+B9. PRESERVING DISAGREEMENT IN RELEASED DATASETS
+    Datasets released with disagreement information intact rather than
+    only adjudicated gold labels.
+
+--- YOUR TASK ---
+
+1. Identify all handling strategies used in the paper. A paper may use
+   multiple strategies at different stages of its pipeline (e.g., A2
+   during annotation, B2 during training).
+
+2. For each strategy, note whether it is applied at the annotation stage,
+   the training stage, the evaluation stage, or the dataset release stage.
+
+3. Identify any "Handling Gap": Does the paper use a technique or
+   mathematical approach for disagreement that falls outside A1–B9?
+
+4. Note internal consistency: if the paper defines subjectivity using
+   Pillar 2 or Pillar 3 (rater-dependence, legitimate disagreement) but
+   handles it using A1–A5, flag this as inconsistent.
+
+Output ONLY a JSON object with no additional text:
+{
+  "paper_id": "{{paper_id}}",
+  "handling_strategies": [
+    {
+      "strategy_code": "A1 / A2 / A3 / A4 / A5 / B1 / B2 / B3 / B4 / B5 / B6 / B7 / B8 / B9",
+      "pipeline_stage": "Annotation / Training / Evaluation / Dataset Release",
+      "quantification_metric": "Name of formula or metric used, or None",
+      "handling_supporting_quote": "Direct word-for-word quote describing this handling strategy."
+    }
+  ],
+  "primary_position": "Noise (A) / Signal (B) / Mixed",
+  "handling_gap_identified": "Detail any technique not covered by A1–B9. Write None if absent.",
+  "internal_consistency": "Consistent / Inconsistent / Not Applicable",
+  "inconsistency_note": "If inconsistent, describe the mismatch between the paper's subjectivity definition and its handling method. Write None if consistent or not applicable.",
+  "thought_process": "Explain your strategy classification and consistency judgment in 3–5 sentences."
+}
+
+PAPER TEXT:
+{{paper_text}}

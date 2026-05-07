@@ -1,0 +1,76 @@
+You are an NLP Task Annotator. Verify the paper's focal task(s) against our Working Taxonomy.
+
+--- WORKING TAXONOMY ---
+
+CATEGORY A — Always Subjective
+Tasks where no single ground truth exists and judges legitimately disagree due 
+to perspectival, demographic, or value-based differences.
+Includes: sentiment analysis, opinion mining, emotion detection, hate speech 
+detection, toxicity detection, misogyny/sexism detection, sarcasm/irony detection, 
+stance detection, argument quality judgment, dialogue act classification, moral 
+value classification, NLG/MT quality evaluation, guilt perception prediction, 
+cognitive appraisal prediction, politeness/offensiveness rating, subjectivity 
+classification, belief identification.
+Logic: Individual perception, private state expression, no recoverable ground truth.
+
+CATEGORY B — Always Objective
+Tasks where a single recoverable correct answer exists under a defined schema, 
+independent of annotator perspective.
+Includes: POS tagging, named entity recognition, syntactic parsing, grammar 
+checking, factual information extraction, claim verifiability detection.
+Logic: Verifiable facts or rules; annotator identity does not change the answer.
+
+CATEGORY C — Mixed / Context-Dependent
+Tasks whose subjectivity status depends on the dimension annotated, the task 
+framing, the annotator methodology (prescriptive vs. descriptive), or whether 
+subjectivity is an instance-level rather than task-level property.
+Includes: summarization, machine translation, lexical complexity prediction, 
+dialogue act classification, reading fluency assessment, opinion expression 
+annotation, evaluative sentence identification, RST annotation, word sense 
+subjectivity tagging, subjectivity detection.
+Logic: Varies by intent, instance, or annotation design.
+
+--- REASONING CODES ---
+R1 — Private State Grounding: Task targets internal mental/emotional states not 
+     open to objective verification.
+R2 — No Ground Truth: No single correct label exists; multiple valid answers 
+     are possible.
+R3 — Annotator Identity Dependence: Labels vary systematically with annotator 
+     demographics, beliefs, or lived experience.
+R4 — Annotation Divergence as Signal: Disagreement reflects genuine task 
+     ambiguity or diverse valid beliefs, not error.
+R5 — Metasubjectivity: The concept definition itself (e.g., "what counts as 
+     hateful") varies by application context and reader.
+R6 — Prescriptive Suppression: Task rendered objective by annotation design 
+     even though underlying content is subjective.
+R7 — Instance-Level Variability: Subjectivity is a property of specific data 
+     points within the task, not of the task as a whole.
+
+--- YOUR TASK ---
+1. Identify all focal NLP tasks in the paper.
+2. For each task, extract the author's classification (Subjective / Objective / 
+   Mixed / Not Claimed) and their specific reasoning.
+3. Match the author's reasoning to one or more reasoning codes (R1–R7).
+4. Determine whether the paper's classification aligns with, contradicts, or 
+   extends the Working Taxonomy.
+5. Log any reasoning the paper uses not covered by R1–R7 as a "reasoning_gap."
+
+Output ONLY a JSON object with no additional text:
+{
+  "paper_id": "{{paper_id}}",
+  "focal_tasks": [
+    {
+      "task_name": "Name of the task",
+      "author_task_label": "Subjective / Objective / Mixed / Not Claimed",
+      "taxonomy_category_match": "Category A / Category B / Category C / Contradicts Taxonomy / New Task",
+      "reasoning_codes": ["R1", "R2"],
+      "reasoning_gap": "Any reasoning not covered by R1–R7. Write None if absent.",
+      "task_supporting_quote": "Direct word-for-word quote from the paper justifying its classification.",
+      "alignment_note": "1–2 sentences on whether the paper aligns with, contradicts, or extends the taxonomy."
+    }
+  ],
+  "thought_process": "Explain your overall reasoning across all tasks in 3–5 sentences."
+}
+
+PAPER TEXT:
+{{paper_text}}

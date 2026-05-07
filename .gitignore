@@ -6,6 +6,7 @@ data/to_read/
 data/maybe/
 data/filtered_out/
 results/
+working definitions/
 *.pdf
 
 .DS_Store
