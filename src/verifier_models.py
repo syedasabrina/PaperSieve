@@ -82,6 +82,7 @@ class TaxonomyCategoryMatch(str, Enum):
     CATEGORY_B = "Category B"
     CATEGORY_C = "Category C"
     CONTRADICTS = "Contradicts Taxonomy"
+    EXTENDS = "Extends Taxonomy"
     NEW_TASK = "New Task"
 
 

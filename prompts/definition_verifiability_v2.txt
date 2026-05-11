@@ -1,0 +1,137 @@
+You are a Linguistic Research Analyst. Analyze the provided paper to verify its definition of subjectivity against our 3-Pillar Working Definition Framework.
+
+--- WORKING DEFINITION: 3-PILLAR FRAMEWORK ---
+
+PILLAR 1 — Expression Level (Linguistic / Author-Centric)
+Subjectivity is a property of text when the author's primary intention is to communicate a personal, non-objective point of view rather than report verifiable facts. It is grounded in "private states" — internal mental or emotional experiences (opinions, evaluations, emotions, speculations, beliefs) that are not open to objective observation or verification [Quirk et al. 1985; Wiebe 1994; Banfield 1982]. Signals include affective vocabulary, evaluative framing, epistemic markers, and lexical items encoding an inner state.
+Boundary conditions: Subjectivity ≠ sentiment or polarity. A sentence can be subjective without carrying polarity ("I think he went home"), and evaluative content can appear in formally objective sentences ("The earphone broke in two days"). Subjectivity at this level is graded, not binary — expressions vary in intensity and density of subjective content.
+
+PILLAR 2 — Interpretive Level (Social / Reader-Centric)
+Subjectivity is a property of judgment when no single ground truth exists because the label assigned to a text is inherently rater-dependent. Judgments vary systematically across judges depending on demographics, cultural background, religious beliefs, lived experience, or personal biases. This produces structured (not random) disagreement — different groups yield different but internally coherent labelings. This is analytically distinct from annotation error.
+Includes: (a) the first-person vs. third-party distinction — self-reported and observer-inferred subjectivity are distinct and can diverge substantially; (b) "metasubjectivity" — where the very definition of a task concept (e.g., "what counts as an opinion?" or "what counts as hateful?") is itself rater- and application-dependent.
+
+PILLAR 3 — Methodological Level (Annotation / Phenomenological)
+Subjectivity is present when legitimate disagreement in human annotations constitutes meaningful signal about task ambiguity or diverse valid beliefs, rather than noise or annotator error. In these tasks, "acceptability" or "individual preference" are more valid evaluation targets than accuracy. Degree of subjectivity is measurable — operationalized as average absolute deviation, pairwise L1 distance, annotation entropy, or inverse output similarity across annotators.
+Boundary condition: Disagreement alone does not confirm subjectivity. Its source must be identified. Disagreement caused by ambiguity in text, missing context, or sloppy annotation is distinct from disagreement caused by perspectival differences. Only the latter reflects Pillar 3 subjectivity.
+
+--- DEFINITION TYPE RULES ---
+
+EXPLICIT requires ALL of the following:
+  - The paper contains a direct definitional statement about what subjectivity means or is.
+  - The statement is the author's own formulation or a named borrowed definition they explicitly adopt.
+  - The definition is stated in a sentence of the form "subjectivity is X" or "we define subjectivity as X" or equivalent.
+  - Example of Explicit: "Subjectivity in NLP tasks is defined as the condition where there are diverse valid beliefs about what the correct data labels should be."
+  - Example of Explicit: "A sentence is subjective if its content is based on or influenced by personal feelings, tastes, or opinions."
+
+IMPLICIT applies when:
+  - The paper uses the term "subjective" or "subjectivity" repeatedly and meaningfully, but never states a definition.
+  - Subjectivity is operationalized through task design, annotation methodology, or model architecture without being defined.
+  - The paper calls a task "subjective" as a label without explaining what makes it so.
+  - The paper uses "subjective" as an adjective to describe tasks, ratings, or phenomena without a definitional claim.
+  - Example of Implicit: A paper trains personalized models because "the task is subjective" without defining what subjectivity means.
+  - Example of Implicit: A paper measures IAA and treats disagreement as evidence of subjectivity without defining the concept.
+
+NONE applies when:
+  - The paper does not engage with subjectivity as a concept at all, or uses the word only in passing (e.g., "we subjectively observe that...").
+
+CRITICAL: Do NOT classify as Explicit simply because:
+  - The paper uses "subjective" frequently.
+  - The paper cites a prior work that defined subjectivity, without adopting that definition as their own.
+  - The paper's methodology implies a view of subjectivity without stating it.
+  - The paper lists tasks as subjective without defining what makes them so.
+
+--- YOUR TASK ---
+
+1. Identify whether the paper's definition of subjectivity is:
+   - Explicit: a direct definitional statement (see rules above)
+   - Implicit: subjectivity is implied or operationalized without a stated definition (see rules above)
+   - None: no engagement with subjectivity as a concept
+
+2. Determine which pillar(s) the paper's definition matches (Pillar 1, 2, 3, or a combination). A paper may engage with multiple pillars at once. If the definition type is Implicit or None, assign pillars based on how subjectivity is operationalized or used, not on whether a definition is stated.
+
+3. Identify any "Definition Gap": Does the paper define or operationalize subjectivity through a conceptual lens NOT covered by the 3 pillars above? Examples of potential gaps include: purely epistemic/semantic framing, temporal or situational variability, economic or behavioral operationalization, cognitive/psychological process framing (e.g., appraisal theory), or structural/computational proxies with no grounding in human judgment.
+
+4. Note if the paper explicitly distinguishes subjectivity from related concepts (sentiment, polarity, evaluation, ambiguity, noise). Write None if this is not addressed.
+
+Output ONLY a JSON object with no additional text:
+{
+  "paper_id": "{{paper_id}}",
+  "subjectivity_def_type": "Explicit / Implicit / None",
+  "pillar_match": ["Pillar 1", "Pillar 2", "Pillar 3"],
+  "matches_working_definition": "Full / Partial / No",
+  "definition_gap_identified": "Detail any conceptual aspect NOT captured by the 3 pillars. Write None if no gap.",
+  "subjectivity_distinguished_from": "List related concepts the paper explicitly separates subjectivity from (e.g., polarity, noise, ambiguity). Write None if not addressed.",
+  "supporting_definition_quote": "Direct word-for-word quote from the paper that best captures its definition or operationalization of subjectivity. Write None if no such quote exists.",
+  "thought_process": "Explain your pillar matching and gap detection reasoning in 3–5 sentences."
+}
+
+PAPER TEXT:
+{{paper_text}}You are a Linguistic Research Analyst. Analyze the provided paper to verify its definition of subjectivity against our 3-Pillar Working Definition Framework.
+
+--- WORKING DEFINITION: 3-PILLAR FRAMEWORK ---
+
+PILLAR 1 — Expression Level (Linguistic / Author-Centric)
+Subjectivity is a property of text when the author's primary intention is to communicate a personal, non-objective point of view rather than report verifiable facts. It is grounded in "private states" — internal mental or emotional experiences (opinions, evaluations, emotions, speculations, beliefs) that are not open to objective observation or verification [Quirk et al. 1985; Wiebe 1994; Banfield 1982]. Signals include affective vocabulary, evaluative framing, epistemic markers, and lexical items encoding an inner state.
+Boundary conditions: Subjectivity ≠ sentiment or polarity. A sentence can be subjective without carrying polarity ("I think he went home"), and evaluative content can appear in formally objective sentences ("The earphone broke in two days"). Subjectivity at this level is graded, not binary — expressions vary in intensity and density of subjective content.
+
+PILLAR 2 — Interpretive Level (Social / Reader-Centric)
+Subjectivity is a property of judgment when no single ground truth exists because the label assigned to a text is inherently rater-dependent. Judgments vary systematically across judges depending on demographics, cultural background, religious beliefs, lived experience, or personal biases. This produces structured (not random) disagreement — different groups yield different but internally coherent labelings. This is analytically distinct from annotation error.
+Includes: (a) the first-person vs. third-party distinction — self-reported and observer-inferred subjectivity are distinct and can diverge substantially; (b) "metasubjectivity" — where the very definition of a task concept (e.g., "what counts as an opinion?" or "what counts as hateful?") is itself rater- and application-dependent.
+
+PILLAR 3 — Methodological Level (Annotation / Phenomenological)
+Subjectivity is present when legitimate disagreement in human annotations constitutes meaningful signal about task ambiguity or diverse valid beliefs, rather than noise or annotator error. In these tasks, "acceptability" or "individual preference" are more valid evaluation targets than accuracy. Degree of subjectivity is measurable — operationalized as average absolute deviation, pairwise L1 distance, annotation entropy, or inverse output similarity across annotators.
+Boundary condition: Disagreement alone does not confirm subjectivity. Its source must be identified. Disagreement caused by ambiguity in text, missing context, or sloppy annotation is distinct from disagreement caused by perspectival differences. Only the latter reflects Pillar 3 subjectivity.
+
+--- DEFINITION TYPE RULES ---
+
+EXPLICIT requires ALL of the following:
+  - The paper contains a direct definitional statement about what subjectivity means or is.
+  - The statement is the author's own formulation or a named borrowed definition they explicitly adopt.
+  - The definition is stated in a sentence of the form "subjectivity is X" or "we define subjectivity as X" or equivalent.
+  - Example of Explicit: "Subjectivity in NLP tasks is defined as the condition where there are diverse valid beliefs about what the correct data labels should be."
+  - Example of Explicit: "A sentence is subjective if its content is based on or influenced by personal feelings, tastes, or opinions."
+
+IMPLICIT applies when:
+  - The paper uses the term "subjective" or "subjectivity" repeatedly and meaningfully, but never states a definition.
+  - Subjectivity is operationalized through task design, annotation methodology, or model architecture without being defined.
+  - The paper calls a task "subjective" as a label without explaining what makes it so.
+  - The paper uses "subjective" as an adjective to describe tasks, ratings, or phenomena without a definitional claim.
+  - Example of Implicit: A paper trains personalized models because "the task is subjective" without defining what subjectivity means.
+  - Example of Implicit: A paper measures IAA and treats disagreement as evidence of subjectivity without defining the concept.
+
+NONE applies when:
+  - The paper does not engage with subjectivity as a concept at all, or uses the word only in passing (e.g., "we subjectively observe that...").
+
+CRITICAL: Do NOT classify as Explicit simply because:
+  - The paper uses "subjective" frequently.
+  - The paper cites a prior work that defined subjectivity, without adopting that definition as their own.
+  - The paper's methodology implies a view of subjectivity without stating it.
+  - The paper lists tasks as subjective without defining what makes them so.
+
+--- YOUR TASK ---
+
+1. Identify whether the paper's definition of subjectivity is:
+   - Explicit: a direct definitional statement (see rules above)
+   - Implicit: subjectivity is implied or operationalized without a stated definition (see rules above)
+   - None: no engagement with subjectivity as a concept
+
+2. Determine which pillar(s) the paper's definition matches (Pillar 1, 2, 3, or a combination). A paper may engage with multiple pillars at once. If the definition type is Implicit or None, assign pillars based on how subjectivity is operationalized or used, not on whether a definition is stated.
+
+3. Identify any "Definition Gap": Does the paper define or operationalize subjectivity through a conceptual lens NOT covered by the 3 pillars above? Examples of potential gaps include: purely epistemic/semantic framing, temporal or situational variability, economic or behavioral operationalization, cognitive/psychological process framing (e.g., appraisal theory), or structural/computational proxies with no grounding in human judgment.
+
+4. Note if the paper explicitly distinguishes subjectivity from related concepts (sentiment, polarity, evaluation, ambiguity, noise). Write None if this is not addressed.
+
+Output ONLY a JSON object with no additional text:
+{
+  "paper_id": "{{paper_id}}",
+  "subjectivity_def_type": "Explicit / Implicit / None",
+  "pillar_match": ["Pillar 1", "Pillar 2", "Pillar 3"],
+  "matches_working_definition": "Full / Partial / No",
+  "definition_gap_identified": "Detail any conceptual aspect NOT captured by the 3 pillars. Write None if no gap.",
+  "subjectivity_distinguished_from": "List related concepts the paper explicitly separates subjectivity from (e.g., polarity, noise, ambiguity). Write None if not addressed.",
+  "supporting_definition_quote": "Direct word-for-word quote from the paper that best captures its definition or operationalization of subjectivity. Write None if no such quote exists.",
+  "thought_process": "Explain your pillar matching and gap detection reasoning in 3–5 sentences."
+}
+
+PAPER TEXT:
+{{paper_text}}

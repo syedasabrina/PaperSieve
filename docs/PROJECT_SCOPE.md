@@ -44,7 +44,7 @@ for manual review.
 - `data/maybe_borderline/` — PDFs scoring 1-2, or scoring 0 with any low confidence
 - `data/filtered_out/` — PDFs scoring 0 with no low confidence
 
-## Track 3 — Verifiability Pipeline (New)
+## Track 3 — Verifiability Pipeline
 **Goal:** Verify whether the working definitions, task taxonomy, and handling 
 methodology taxonomy developed from manual analysis hold up against the full 
 corpus of filtered papers.
@@ -95,9 +95,15 @@ Prompt files live in `prompts/` and are versioned explicitly:
 - `gold_standard_verifiability.xlsx` — manually derived gold standard from the 70 papers 
   already analyzed by hand, used to assess pipeline accuracy before full run
 
+---
+
 ## Analytical Frameworks (Track 1 outputs, used as Track 3 inputs)
 
-### Working Definition of Subjectivity — 3-Pillar Framework
+### Working Definition of Subjectivity — Version History
+
+---
+
+#### Version 1 (Derived from 70 manually analyzed papers)
 
 Subjectivity is the condition in which natural language either expresses or is 
 interpreted through private states — internal mental or emotional experiences 
@@ -125,6 +131,113 @@ rather than noise or annotator error. Degree of subjectivity is measurable —
 operationalized as average absolute deviation, pairwise L1 distance, annotation 
 entropy, or inverse output similarity across annotators. Disagreement alone does 
 not confirm subjectivity — its source must be identified.
+
+---
+
+#### Version 2 (Updated after verifiability run on 175 to_read papers)
+
+**What changed and why:**
+
+The three pillars are structurally unchanged. 151 of 175 papers matched the 
+framework at Partial or Full level, confirming the pillars capture the dominant 
+operationalizations in the literature. Version 2 adds precision at the boundaries 
+of each pillar and documents recurring operationalizations in the corpus that 
+the pillars do not fully cover. These are not new pillars — they are extensions, 
+boundary conditions, and documented alternatives.
+
+**Changes to Pillar 1:**
+
+Added: Cognitive and psychological process framings — papers grounding subjectivity 
+in appraisal theory (2023.findings-emnlp.962), gaze-based cognitive signals 
+(2024.emnlp-main.11), or value trade-off theory — are operationalizing Pillar 1 
+at a deeper mechanistic level. These count as Pillar 1 operationalizations, not 
+gaps, because the underlying phenomenon (private states) is the same. The pillar 
+does not need to enumerate psychological theories; it needs to acknowledge that 
+the mechanism producing private states is studied independently of their 
+linguistic expression.
+
+Added boundary condition: First-person reports of an author's own emotions are 
+a special case. Some papers (2024.lrec-main.25) classify these as objective on 
+the grounds that the author is the most reliable source for information about 
+their own internal state. This is a known theoretical position in the literature 
+and should be flagged as a competing claim, not incorporated into the definition.
+
+**Changes to Pillar 2:**
+
+Added: The temporal and situational dimension of rater-dependence. Several papers 
+note that what counts as subjective is not stable across time — terms acquire 
+subjectivity through evolving social usage, annotator judgments vary with recent 
+media exposure or daily mood, and public opinion shifts in response to external 
+events. This is acknowledged as a modifier of Pillar 2 rather than a new dimension: 
+rater-dependence is not only a function of stable demographic identity but also 
+of situational and temporal context.
+
+Added: Structured linguistic theories (Appraisal Theory, Speech Act Theory, 
+modality theory) are specific theoretical frameworks that operationalize Pillar 1 
+signals, not independent lenses. Their presence in a paper does not constitute 
+a definition gap.
+
+**Changes to Pillar 3:**
+
+Added boundary condition: Computational proxies for subjectivity — corpus 
+statistics (log-likelihood across corpora types), model predictive uncertainty 
+or entropy, latent generative factors, tunable loss parameters — are not 
+equivalent to measuring human disagreement. They may correlate with human 
+perspectival differences but are not the same phenomenon. Papers that operationalize 
+subjectivity exclusively through computational proxies are doing something 
+categorically distinct from Pillar 3 and should be flagged as such. This is 
+the most frequent gap identified in the to_read corpus (16 occurrences across 
+175 papers).
+
+**Documented alternative operationalizations (not incorporated into the pillars):**
+
+These are recurring framings in the corpus that do not fit the three pillars 
+and are documented as competing or complementary positions for the position paper 
+to engage with:
+
+1. *Behavioral / pragmatic impact framing.* Several papers (most explicitly 
+   N13-1081; also ACL_D15-1238, RLHF/preference papers) define opinion or 
+   subjectivity not through the author's private state or the reader's judgment, 
+   but through its potential effect on a third party's behavior. N13-1081 
+   explicitly rejects the Pillar 1 private-state definition and proposes this 
+   as a replacement. This is the strongest theoretical alternative to the 
+   three-pillar framework in the corpus and requires a direct response in the 
+   position paper.
+
+2. *Normative / prescriptive framing.* Some papers (2021.findings-emnlp.155) 
+   define subjectivity as deviation from an objective standard (e.g., Wikipedia's 
+   NPOV policy) rather than as an inherent property of language or judgment. 
+   This conflates subjectivity with bias and treats objectivity as achievable 
+   through policy, which is a prescriptive rather than descriptive position.
+
+3. *Ambiguity conflation.* Several papers treat disagreement arising from textual 
+   ambiguity or missing context as equivalent to disagreement arising from 
+   perspectival differences. The three-pillar framework explicitly distinguishes 
+   these (Pillar 3 boundary condition). Papers that conflate them are 
+   methodologically imprecise by the framework's standard.
+
+**What did not change:**
+
+The core definition — subjectivity as private states not open to objective 
+observation or verification — survives intact. The three-level structure 
+(expression, interpretation, methodology) survives intact. The graded rather 
+than binary treatment survives intact. The distinction between subjectivity and 
+polarity/sentiment survives intact.
+
+---
+
+#### Summary: v1 → v2 delta
+
+| Component | v1 | v2 |
+|---|---|---|
+| Number of pillars | 3 | 3 (unchanged) |
+| Pillar 1 scope | Private states, linguistic signals | + cognitive/psychological mechanism acknowledged; + competing claim on self-reported emotion noted |
+| Pillar 2 scope | Demographic rater-dependence, first-person vs third-party, metasubjectivity | + temporal and situational variability of rater-dependence added |
+| Pillar 3 scope | Legitimate disagreement as signal; measurable via AAD, L1, entropy, ROUGE | + boundary condition: computational proxies ≠ human disagreement |
+| Documented alternatives | None | Behavioral/pragmatic impact framing; normative/prescriptive framing; ambiguity conflation |
+| Core definition | Unchanged | Unchanged |
+
+---
 
 ### Working Task Taxonomy
 
@@ -172,6 +285,8 @@ B3 Multi-Task Learning with Per-Annotator Heads, B4 Personalized Modeling,
 B5 Continuous Subjectivity Quantification, B6 Modeling Subjectivity as Auxiliary 
 Prediction Target, B7 Annotator Identity / Context as Model Input,  
 B8 Annotator-Centric Active Learning, B9 Preserving Disagreement in Released Datasets
+
+---
 
 ## Explicit Non-Goals
 - The agent does NOT generate theoretical claims

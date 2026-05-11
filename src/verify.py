@@ -124,12 +124,46 @@ def call_with_parse_retry(prompt: str, parse_fn, model: str = DEFAULT_VERIFY_MOD
 
 
 # ---------------------------------------------------------------------------
+# Pipeline stage normalization
+# Gemini sometimes returns combined strings like "Training / Evaluation"
+# which are not valid enum values. Normalize to the first valid token.
+# ---------------------------------------------------------------------------
+
+PIPELINE_STAGE_ALIASES = {
+    "training / evaluation": "Training",
+    "training/evaluation": "Training",
+    "annotation / training": "Annotation",
+    "annotation/training": "Annotation",
+    "training / dataset release": "Training",
+    "evaluation / dataset release": "Evaluation",
+    "annotation / evaluation": "Annotation",
+    "annotation / dataset release": "Annotation",
+    "training / evaluation / dataset release": "Training",
+}
+
+
+def normalize_pipeline_stage(raw: str) -> str:
+    if not raw:
+        return "Annotation"
+    normalized = raw.strip().lower()
+    if normalized in PIPELINE_STAGE_ALIASES:
+        return PIPELINE_STAGE_ALIASES[normalized]
+    return raw.strip().split("/")[0].strip().title()
+
+
+def normalize_strategy_code(raw: str) -> str:
+    if not raw:
+        return "A1"
+    return raw.strip().split("/")[0].strip()
+
+
+# ---------------------------------------------------------------------------
 # Parse functions — one per prompt
 # ---------------------------------------------------------------------------
 
 def parse_definition(raw: str, paper_id: str) -> DefinitionResult:
     data = normalize_none_strings(json.loads(clean_json(raw)))
-    
+
     raw_dist = data.get("subjectivity_distinguished_from")
     if isinstance(raw_dist, list):
         raw_dist = ", ".join(raw_dist)
@@ -171,8 +205,10 @@ def parse_handling(raw: str, paper_id: str) -> HandlingResult:
     strategies = []
     for s in (data.get("handling_strategies") or []):
         strategies.append(HandlingStrategy(
-            strategy_code=StrategyCode(s["strategy_code"]),
-            pipeline_stage=PipelineStage(s["pipeline_stage"]),
+            strategy_code=StrategyCode(normalize_strategy_code(s.get("strategy_code", "A1"))),
+            pipeline_stage=PipelineStage(
+                normalize_pipeline_stage(s.get("pipeline_stage", "Annotation"))
+            ),
             quantification_metric=s.get("quantification_metric"),
             handling_supporting_quote=s.get("handling_supporting_quote"),
         ))
@@ -195,9 +231,9 @@ def verify_paper(pdf_path: Path, paper_id: str, model: str = DEFAULT_VERIFY_MODE
     sections = extract_sections(pdf_path)
     paper_text = sections_to_text(sections)
 
-    def_template = load_prompt("definition_verifiability_v1.txt")
-    tax_template = load_prompt("taxonomy_verifiability_v1.txt")
-    han_template = load_prompt("handling_verifiability_v1.txt")
+    def_template = load_prompt("definition_verifiability_v2.txt")
+    tax_template = load_prompt("taxonomy_verifiability_v2.txt")
+    han_template = load_prompt("handling_verifiability_v2.txt")
 
     def_prompt = build_prompt(def_template, paper_id, paper_text)
     tax_prompt = build_prompt(tax_template, paper_id, paper_text)
