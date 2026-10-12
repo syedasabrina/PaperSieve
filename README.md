@@ -1,6 +1,6 @@
 # PaperSieve
 
-A two-model agentic screening pipeline that reduces a corpus of 3000+ NLP papers to a ranked, categorized reading list, with a framework extension pipeline that tests working theoretical frameworks against the filtered corpus. Built to support a PhD research project on subjectivity in NLP tasks.
+A two-model agentic screening pipeline that reduces a corpus of 3000+ NLP papers to a ranked, categorized reading list, with a framework extension pipeline that tests working theoretical frameworks against the filtered corpus. 
 
 ---
 
@@ -36,23 +36,6 @@ scorer.py        ← persist results to JSON log and rankings CSV
 route_files.py   ← copy PDFs to bucket folders based on run results
 ```
 
-### Framework Extension
-
-```
-PDF papers (from any bucket folder)
-    │
-    ▼
-extractor.py     ← reused section-aware PDF extraction
-    │
-    ▼
-verify.py        ← three Gemini prompts per paper:
-    │                 definition_vN.txt  → DefinitionResult
-    │                 taxonomy_vN.txt    → TaxonomyResult
-    │                 handling_vN.txt    → HandlingResult
-    │               parse-failure retry (same model, once)
-    ▼
-verify_writer.py ← writes 4-sheet xlsx + per-paper JSON logs
-```
 
 ---
 
@@ -62,10 +45,10 @@ Four yes/no questions applied to every paper:
 
 | | Question |
 |---|---|
-| Q1 | Does the paper explicitly call an NLP task subjective or objective? |
-| Q2 | Does it define or frame what subjectivity means in any way? |
-| Q3 | Does it discuss annotation disagreement or inter-annotator agreement as a core methodological concern? |
-| Q4 | Does it discuss how to handle subjectivity — any strategy, framework, or approach? |
+| C1 | Does the paper explicitly call an NLP task subjective or objective? |
+| C2 | Does it define or frame what subjectivity means in any way? |
+| C3 | Does it discuss annotation disagreement or inter-annotator agreement as a core methodological concern? |
+| C4 | Does it discuss how to handle subjectivity — any strategy, framework, or approach? |
 
 Each answer includes a direct quote from the paper, the section it was found in, a confidence level (high / medium / low), and a justification. A yes answer without a supporting quote is not permitted.
 
@@ -86,20 +69,6 @@ Papers with any low-confidence criterion are flagged `manual_review=true` regard
 
 ---
 
-## Framework extension prompts
-
-Three structured prompts are run per paper against the working analytical frameworks:
-
-| Prompt | Tests | Output fields |
-|---|---|---|
-| `definition_vN.txt` | Whether the paper's definition of subjectivity matches the 2-Pillar Framework | `subjectivity_def_type`, `pillar_match`, `matches_working_definition`, `definition_gap_identified` |
-| `taxonomy_vN.txt` | Whether the paper's task classification aligns with the Working Task Taxonomy (Category A/B/C) | `author_task_label`, `taxonomy_category_match`, `reasoning_codes` (R1–R7), `reasoning_gap` |
-| `handling_vN.txt` | Whether the paper's methodology matches the Working Handling Taxonomy (A1–A5, B1–B9) | `strategy_code`, `pipeline_stage`, `primary_position`, `internal_consistency` |
-
-Prompts are versioned. After assessing results against the gold standard, prompts are updated (v1 → v2) and re-run. The iteration strategy is: `to_read` first → assess → adjust → `maybe_recheck` next → repeat.
-
----
-
 ## Project structure
 
 ```
@@ -109,7 +78,6 @@ PaperSieve/
 │   ├── extractor.py           — section-aware PDF extraction
 │   ├── analyzer.py            — two-model Gemini calls, backoff, retry logic
 │   ├── scorer.py              — JSON logging and CSV appending
-│   ├── verifier_models.py     — Pydantic models for framework extension pipeline
 │   ├── verify.py              — three-prompt Gemini calls, parse-retry logic
 │   └── verify_writer.py       — 4-sheet xlsx writer with crash recovery
 ├── scripts/
@@ -118,9 +86,6 @@ PaperSieve/
 ├── prompts/
 │   ├── screening_v1.txt       — main screening prompt (Flash)
 │   ├── retry_v1.txt           — targeted retry prompt (Pro)
-│   ├── definition_v1.txt      — framework extension: definition prompt
-│   ├── taxonomy_v1.txt        — framework extension: task taxonomy prompt
-│   ├── handling_v1.txt        — framework extension: handling taxonomy prompt
 │   └── criterion_questions.json
 ├── docs/
 │   └── screening_rubric.md
@@ -136,12 +101,9 @@ PaperSieve/
 ├── results/
 │   └── <run_id>/
 │       ├── rankings.csv           — screening: one row per paper
-│       ├── verifiability.xlsx     — framework extension: 4-sheet workbook
 │       └── logs/                  — one JSON per paper for both pipelines
 ├── pipeline.py                — screening orchestrator with auto-retry
-├── verify_pipeline.py         — framework extension orchestrator
 ├── main.py                    — CLI entry point (screening + verify subcommands)
-├── gold_standard_verifiability.xlsx — manually derived gold standard (70 papers)
 └── requirements.txt
 ```
 
@@ -163,13 +125,6 @@ python main.py run --input-dir data/papers --run-id run_001 --model gemini-2.5-f
 
 If the run crashes, re-running the same command resumes from where it stopped. Papers that failed due to API errors are automatically retried at the end of the run.
 
-**Run the framework extension pipeline:**
-
-```bash
-python main.py verify run --input-dir data/to_read/ --run-id verify_001 --model gemini-2.5-pro
-```
-
-Use `--model gemini-2.5-flash` for a faster, cheaper pass. Use `--model gemini-2.5-pro` for the assessment run you compare against the gold standard.
 
 **Route PDFs to bucket folders after a screening run:**
 
@@ -193,12 +148,6 @@ python scripts/validate.py --run-id run_001
 
 `results/<run_id>/logs/<paper_id>.json` — full evidence record for one paper including all four criterion results with quotes, sections, justifications, and pipeline metadata.
 
-**Framework Extension:**
-
-`results/<run_id>/verifiability.xlsx` — four sheets: Definition (one row per paper), Taxonomy (one row per focal task per paper), Handling (one row per paper), Summary (one row per paper combining all three prompts).
-
-`results/<run_id>/logs/<paper_id>.json` — per-paper model output for all three framework extension prompts.
-
 ---
 
 ## Models
@@ -207,7 +156,6 @@ python scripts/validate.py --run-id run_001
 |---|---|---|
 | Screening pass 1 | `gemini-2.5-flash` | Full paper screening, all four criteria |
 | Screening pass 2 (retry) | `gemini-2.5-pro` | Targeted re-examination of low-confidence criteria |
-| Framework extension | configurable via `--model` | All three prompts per paper; default `gemini-2.5-flash` |
 
 Temperature is set to 0.0 for deterministic outputs. 503 errors are retried with exponential backoff (30s, 60s, 90s).
 
@@ -226,19 +174,6 @@ The screening pipeline was validated against a manually labeled gold set of 36 p
 | C3 | Does it discuss annotation disagreement or inter-annotator agreement? | 29/36 (80%) | 30/36 (83%) | 30/36 (83%) |
 | C4 | Does it discuss how to handle subjectivity? | 31/36 (86%) | 31/36 (86%) | 32/36 (88%) |
 
-### Classification metrics
-
-| Metric | Flash | Pro | Two-Model |
-|---|---|---|---|
-| Exact bucket match | 24/36 (66%) | 25/36 (69%) | 22/36 (61%) |
-| Precision (to_read) | 0.79 | 0.85 | 1.00 |
-| Recall (to_read) | 0.85 | 0.85 | 0.54 |
-| False positive rate | 0.13 | 0.09 | 0.00 |
-| to_read papers incorrectly filtered out | 0/36 (0%) | 0/36 (0%) | 0/36 (0%) |
-
-The two-model pipeline achieves perfect precision — every paper placed in `to_read` is a true positive. The tradeoff is recall: five score==3 papers that were manually judged relevant are routed to `maybe_recheck` rather than `to_read`. These papers are not lost; they require manual review. The sixth false negative (`2025.emnlp-main.1261`) is a documented Q1 strictness failure. Known limitations are documented in `docs/PROJECT_SCOPE.md`.
-
-The framework extension pipeline is validated against `gold_standard_verifiability.xlsx`, a manually derived gold standard covering 70 papers from the `to_read` bucket across all three analytical dimensions.
 
 ---
 
