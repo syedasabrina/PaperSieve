@@ -20,7 +20,7 @@ GLOBAL RULES
 
 SCREENING QUESTIONS
 
-Q1: Does the paper explicitly call an NLP task subjective or objective?
+C1: Does the paper explicitly call an NLP task subjective or objective?
 
 Focus: Linking a specific task name to a subjectivity label. The word "subjective," "objective," or a direct equivalent must appear in connection with the task.
 
@@ -33,7 +33,7 @@ Evidence quote must show: Task name and subjectivity or objectivity claim in the
 
 ---
 
-Q2: Does it define or frame what subjectivity means in any way?
+C2: Does it define or frame what subjectivity means in any way?
 
 Focus: The "What" and "Why" of subjectivity — definitions, contrasts, or characterizations. The label used may be synonymous with subjective (e.g., perspective-dependent, opinion-based).
 
@@ -46,7 +46,7 @@ Evidence quote must show: Actual definitional or framing text — not just the k
 
 ---
 
-Q3: Does it discuss annotation disagreement or inter-annotator agreement?
+C3: Does it discuss annotation disagreement or inter-annotator agreement?
 
 Focus: Technical or procedural intervention. The authors are not just measuring agreement — they are doing something with it as a core part of methodology or experiments.
 
@@ -59,7 +59,7 @@ Evidence quote must show: The technical description of the method or procedural 
 
 ---
 
-Q4: Does it discuss how to handle subjectivity?
+C4: Does it discuss how to handle subjectivity?
 
 Focus: Strategic or conceptual "how-to." Covers both building systems and high-level arguments. Includes position papers and theoretical recommendations.
 
@@ -80,10 +80,10 @@ Respond ONLY with a valid JSON object. No preamble, no markdown code blocks, no 
 Use exactly this structure:
 
 {
-  "q1": {"label": "yes or no", "confidence": "must be high or medium or low. never anything else", "quote": "direct quote from paper or null", "section": "section name or null", "justification": "brief explanation of label and confidence"},
-  "q2": {"label": "yes or no", "confidence": "must be high or medium or low. never anything else", "quote": "direct quote from paper or null", "section": "section name or null", "justification": "brief explanation of label and confidence"},
-  "q3": {"label": "yes or no", "confidence": "must be high or medium or low. never anything else", "quote": "direct quote from paper or null", "section": "section name or null", "justification": "brief explanation of label and confidence"},
-  "q4": {"label": "yes or no", "confidence": "must be high or medium or low. never anything else", "quote": "direct quote from paper or null", "section": "section name or null", "justification": "brief explanation of label and confidence"}
+  "c1": {"label": "yes or no", "confidence": "must be high or medium or low. never anything else", "quote": "direct quote from paper or null", "section": "section name or null", "justification": "brief explanation of label and confidence"},
+  "c2": {"label": "yes or no", "confidence": "must be high or medium or low. never anything else", "quote": "direct quote from paper or null", "section": "section name or null", "justification": "brief explanation of label and confidence"},
+  "c3": {"label": "yes or no", "confidence": "must be high or medium or low. never anything else", "quote": "direct quote from paper or null", "section": "section name or null", "justification": "brief explanation of label and confidence"},
+  "c4": {"label": "yes or no", "confidence": "must be high or medium or low. never anything else", "quote": "direct quote from paper or null", "section": "section name or null", "justification": "brief explanation of label and confidence"}
 }
 
 Rules for the JSON:
